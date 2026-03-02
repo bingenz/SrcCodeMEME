@@ -1,5 +1,6 @@
-❤️ CẤP TK YOUTUBE PREMIUM GIÁ RẺ
-✨️Nhận Code Bot Telegram Theo Yêu Cầu: Box chat, Bán hàng, Tool, Phân tích, Lọc dữ liệu, Thống kê,... 
+❤️ NÂNG CẤP TK CHAT GPT PLUS, YOUTUBE PREMIUM GIÁ RẺ
+✨️Nhận Thiết Kế Website, Bot Telegram
 --------- 
+LINK WEBSITE XEM CHI TIẾT: https://binpinkgold.lnth.workers.dev/
 💬FB: https://www.facebook.com/profile.php?id=100048717996777 
 💬ZL: 08989 08101
