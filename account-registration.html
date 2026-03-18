@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng Ký Tài Khoản</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-blue: #00d4ff;
+    --neon-purple: #7b2fff;
+    --neon-pink: #ff2d78;
+    --bg-deep: #050812;
+    --bg-card: rgba(8, 14, 35, 0.92);
+    --glass: rgba(255,255,255,0.04);
+    --border-glow: rgba(0,212,255,0.25);
+    --text-primary: #e8f4ff;
+    --text-muted: rgba(180,210,255,0.55);
+    --red-alert: #ff2d2d;
+    --green-ok: #00ffaa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-deep);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridPulse 8s ease-in-out infinite;
+  }
+
+  @keyframes gridPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.9; }
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: floatOrb 12s ease-in-out infinite;
+  }
+  .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(123,47,255,0.35), transparent); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb-2 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(0,212,255,0.3), transparent); bottom: -80px; right: -80px; animation-delay: -4s; }
+  .orb-3 { width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,45,120,0.25), transparent); top: 50%; left: 20%; animation-delay: -8s; }
+
+  @keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+  }
+
+  /* Scanning line */
+  .scan-line {
+    position: fixed; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+    animation: scan 6s linear infinite;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  @keyframes scan { from { top: -2px; } to { top: 100vh; } }
+
+  /* Main card */
+  .card-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 420px;
+    max-width: 95vw;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 2;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border: 1px solid var(--border-glow);
+    background: rgba(5,8,18,0.8);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    transition: all 0.3s;
+  }
+  .tab:first-child { border-radius: 8px 0 0 0; border-right: none; }
+  .tab:last-child { border-radius: 0 8px 0 0; }
+  .tab.active {
+    background: var(--bg-card);
+    color: var(--neon-blue);
+    border-bottom-color: transparent;
+    text-shadow: 0 0 12px var(--neon-blue);
+  }
+  .tab:hover:not(.active) { color: var(--text-primary); background: rgba(0,212,255,0.05); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 0 12px 12px 12px;
+    padding: 32px 28px 28px;
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 0 60px rgba(0,212,255,0.08),
+      0 0 120px rgba(123,47,255,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
+    animation: topGlow 4s ease-in-out infinite;
+  }
+  @keyframes topGlow { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  /* Header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .header-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(0,212,255,0.4);
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* Alert banner */
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .alert-error {
+    background: rgba(255,45,45,0.12);
+    border: 1px solid rgba(255,45,45,0.4);
+    color: #ff8080;
+  }
+  .alert-error::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--red-alert);
+    box-shadow: 0 0 8px var(--red-alert);
+  }
+
+  .alert-icon {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .alert-error .alert-icon { background: rgba(255,45,45,0.25); color: var(--red-alert); }
+
+  .alert-close {
+    margin-left: auto;
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 16px;
+    padding: 0 0 0 8px;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .alert-close:hover { opacity: 1; }
+
+  /* Form */
+  .form-group { margin-bottom: 18px; }
+
+  label {
+    display: block;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 13px 44px 13px 16px;
+    background: rgba(0,212,255,0.03);
+    border: 1px solid rgba(0,212,255,0.18);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+    outline: none;
+  }
+
+  input::placeholder { color: rgba(180,210,255,0.25); }
+
+  input:focus {
+    border-color: var(--neon-blue);
+    background: rgba(0,212,255,0.06);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.1), inset 0 0 20px rgba(0,212,255,0.03);
+  }
+
+  input.valid { border-color: rgba(0,255,170,0.4); }
+  input.invalid { border-color: rgba(255,45,45,0.5); }
+
+  .input-icon {
+    position: absolute;
+    right: 13px; top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    user-select: none;
+  }
+  .input-icon:hover { opacity: 1; }
+
+  /* Password strength */
+  .strength-bar {
+    margin-top: 8px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .strength-segment {
+    height: 3px;
+    flex: 1;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    transition: background 0.4s;
+  }
+  .strength-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    font-weight: 600;
+  }
+
+  /* Password match */
+  .match-hint {
+    font-size: 11px;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+    height: 14px;
+    transition: all 0.3s;
+  }
+
+  /* Submit button */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    margin-top: 8px;
+    box-shadow: 0 4px 24px rgba(0,212,255,0.25);
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,212,255,0.4);
+  }
+  .btn-primary:hover::before { opacity: 1; }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    animation: ripple 0.6s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes ripple {
+    from { width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%) scale(0); }
+    to { width: 200px; height: 200px; opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* Footer link */
+  .card-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+  .card-footer a {
+    color: var(--neon-blue);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-shadow: none;
+  }
+  .card-footer a:hover { text-shadow: 0 0 10px var(--neon-blue); }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border-glow); }
+  .divider-text { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; }
+
+  /* Corner decorations */
+  .corner {
+    position: absolute; width: 16px; height: 16px;
+    pointer-events: none;
+  }
+  .corner-tl { top: 8px; left: 8px; border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue); }
+  .corner-tr { top: 8px; right: 8px; border-top: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue); }
+  .corner-bl { bottom: 8px; left: 8px; border-bottom: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue); }
+  .corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue); }
+
+  /* Panel switch animation */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadePanel 0.35s ease; }
+  @keyframes fadePanel {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Particles */
+  .particles {
+    position: fixed; inset: 0; pointer-events: none; overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--neon-blue);
+    border-radius: 50%;
+    animation: rise linear infinite;
+    opacity: 0;
+  }
+  @keyframes rise {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+  }
+
+  /* Success state */
+  .success-overlay {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+  .success-icon { font-size: 48px; animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  .success-title { font-family: 'Orbitron', monospace; font-size: 16px; color: var(--green-ok); letter-spacing: 2px; text-shadow: 0 0 20px var(--green-ok); }
+  .success-msg { color: var(--text-muted); font-size: 13px; }
+  @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div class="scan-line"></div>
+
+<div class="card-wrapper">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('register')">Đăng Ký</div>
+    <div class="tab" onclick="switchTab('forgot')">Quên Mật Khẩu</div>
+  </div>
+
+  <div class="card">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <!-- REGISTER PANEL -->
+    <div class="panel active" id="panel-register">
+      <div class="card-header">
+        <div class="header-icon">👤</div>
+        <div>
+          <div class="card-title">Tạo Tài Khoản</div>
+          <div class="card-subtitle">Account Registration</div>
+        </div>
+      </div>
+
+      <div class="alert alert-error" id="register-alert" style="display:none">
+        <div class="alert-icon">!</div>
+        <div id="register-alert-msg">Mật khẩu này đã được sử dụng bởi <strong>viktor32@gmail.com</strong>. Vui lòng chọn mật khẩu khác.</div>
+        <div class="alert-close" onclick="closeAlert('register-alert')">✕</div>
+      </div>
+
+      <div class="form-group">
+        <label>Địa chỉ Email</label>
+        <div class="input-wrap">
+          <input type="email" id="reg-email" placeholder="example@gmail.com" oninput="validateEmail(this)">
+          <span class="input-icon" id="email-icon">✉</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Mật Khẩu</label>
+        <div class="input-wrap">
+          <input type="password" id="reg-pass" placeholder="Nhập mật khẩu..." oninput="checkStrength(this)">
+          <span class="input-icon" onclick="togglePass('reg-pass', this)">👁</span>
+        </div>
+        <div class="strength-bar" id="strength-bar" style="display:none">
+          <div class="strength-segment" id="s1"></div>
+          <div class="strength-segment" id="s2"></div>
+          <div class="strength-segment" id="s3"></div>
+          <div class="strength-segment" id="s4"></div>
+          <span class="strength-label" id="strength-label"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Xác Nhận Mật Khẩu</label>
+        <div class="input-wrap">
+          <input type="password" id="reg-confirm" placeholder="Nhập lại mật khẩu..." oninput="checkMatch()">
+          <span class="input-icon" onclick="togglePass('reg-confirm', this)">👁</span>
+        </div>
+        <div class="match-hint" id="match-hint"></div>
+      </div>
+
+      <button class="btn-primary" onclick="handleRegister(event)">
+        ⚡ TẠO TÀI KHOẢN
+      </button>
+
+      <div class="card-footer">
+        Đã có tài khoản? <a href="#" onclick="switchTab('login')">Đăng Nhập</a>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD PANEL -->
+    <div class="panel" id="panel-forgot">
+      <div class="card-header">
+        <div class="header-icon">🔑</div>
+        <div>
+          <div class="card-title">Đặt Lại Mật Khẩu</div>
+          <div class="card-subtitle">Reset Password</div>
+        </div>
+      </div>
+
+      <div class="alert alert-error" id="forgot-alert">
+        <div class="alert-icon">!</div>
+        <div>Vui lòng nhập mật khẩu đã quên</div>
+        <div class="alert-close" onclick="closeAlert('forgot-alert')">✕</div>
+      </div>
+
+      <div class="form-group">
+        <label>Email Đã Đăng Ký</label>
+        <div class="input-wrap">
+          <input type="email" id="forgot-email" placeholder="Nhập email của bạn...">
+          <span class="input-icon">✉</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Mật Khẩu Cũ (Đã Quên)</label>
+        <div class="input-wrap">
+          <input type="password" id="forgot-old" placeholder="Mật khẩu bạn đã quên...">
+          <span class="input-icon" onclick="togglePass('forgot-old', this)">👁</span>
+        </div>
+      </div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">MẬT KHẨU MỚI</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Mật Khẩu Mới</label>
+        <div class="input-wrap">
+          <input type="password" id="forgot-new" placeholder="Nhập mật khẩu mới..." oninput="checkStrengthForgot(this)">
+          <span class="input-icon" onclick="togglePass('forgot-new', this)">👁</span>
+        </div>
+        <div class="strength-bar" id="strength-bar-f" style="display:none">
+          <div class="strength-segment" id="f1"></div>
+          <div class="strength-segment" id="f2"></div>
+          <div class="strength-segment" id="f3"></div>
+          <div class="strength-segment" id="f4"></div>
+          <span class="strength-label" id="strength-label-f"></span>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="handleForgot(event)">
+        🔐 ĐẶT LẠI MẬT KHẨU
+      </button>
+
+      <div class="card-footer">
+        Nhớ ra rồi? <a href="#" onclick="switchTab('register')">Quay Lại</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = -(Math.random() * 20) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+    if (Math.random() > 0.6) p.style.background = '#7b2fff';
+    if (Math.random() > 0.8) p.style.background = '#ff2d78';
+    container.appendChild(p);
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (tab === 'register' && i === 0) || (tab !== 'register' && i === 1));
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const target = tab === 'forgot' ? 'panel-forgot' : 'panel-register';
+    document.getElementById(target).classList.add('active');
+  }
+
+  function closeAlert(id) {
+    const el = document.getElementById(id);
+    el.style.animation = 'none';
+    el.style.transition = 'opacity 0.3s, transform 0.3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-6px)';
+    setTimeout(() => el.style.display = 'none', 300);
+  }
+
+  function togglePass(id, icon) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    icon.style.opacity = inp.type === 'text' ? '1' : '0.5';
+  }
+
+  function validateEmail(inp) {
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inp.value);
+    inp.className = inp.value ? (valid ? 'valid' : 'invalid') : '';
+    document.getElementById('email-icon').textContent = inp.value ? (valid ? '✓' : '✉') : '✉';
+    document.getElementById('email-icon').style.color = valid ? '#00ffaa' : '';
+  }
+
+  function getStrength(val) {
+    let s = 0;
+    if (val.length >= 6) s++;
+    if (val.length >= 10) s++;
+    if (/[A-Z]/.test(val) && /[0-9]/.test(val)) s++;
+    if (/[^A-Za-z0-9]/.test(val)) s++;
+    return s;
+  }
+
+  function applyStrength(val, ids, labelId, barId) {
+    const bar = document.getElementById(barId);
+    if (!val) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    const s = getStrength(val);
+    const colors = ['#ff4444','#ff8800','#ffdd00','#00ffaa'];
+    const labels = ['YẾU','TRUNG BÌNH','TỐT','MẠNH'];
+    const labelColors = ['#ff6666','#ffaa44','#ffee44','#00ffaa'];
+    ids.forEach((id, i) => {
+      document.getElementById(id).style.background = i < s ? colors[s - 1] : 'rgba(255,255,255,0.08)';
+      if (i < s) document.getElementById(id).style.boxShadow = `0 0 6px ${colors[s-1]}66`;
+      else document.getElementById(id).style.boxShadow = 'none';
+    });
+    const label = document.getElementById(labelId);
+    label.textContent = labels[s - 1] || '';
+    label.style.color = labelColors[s - 1] || '';
+  }
+
+  function checkStrength(inp) {
+    applyStrength(inp.value, ['s1','s2','s3','s4'], 'strength-label', 'strength-bar');
+    checkMatch();
+  }
+
+  function checkStrengthForgot(inp) {
+    applyStrength(inp.value, ['f1','f2','f3','f4'], 'strength-label-f', 'strength-bar-f');
+  }
+
+  function checkMatch() {
+    const p = document.getElementById('reg-pass').value;
+    const c = document.getElementById('reg-confirm').value;
+    const hint = document.getElementById('match-hint');
+    const input = document.getElementById('reg-confirm');
+    if (!c) { hint.textContent = ''; input.className = ''; return; }
+    if (p === c) {
+      hint.textContent = '✓ Mật khẩu khớp!';
+      hint.style.color = '#00ffaa';
+      input.className = 'valid';
+    } else {
+      hint.textContent = '✗ Mật khẩu không khớp';
+      hint.style.color = '#ff6666';
+      input.className = 'invalid';
+    }
+  }
+
+  function rippleEffect(btn, e) {
+    const r = document.createElement('div');
+    r.className = 'btn-ripple';
+    const rect = btn.getBoundingClientRect();
+    r.style.left = (e.clientX - rect.left) + 'px';
+    r.style.top = (e.clientY - rect.top) + 'px';
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 700);
+  }
+
+  function handleRegister(e) {
+    rippleEffect(e.currentTarget, e);
+    const email = document.getElementById('reg-email').value;
+    const pass = document.getElementById('reg-pass').value;
+    const confirm = document.getElementById('reg-confirm').value;
+    const alert = document.getElementById('register-alert');
+
+    if (!email || !pass || !confirm) {
+      document.getElementById('register-alert-msg').textContent = 'Vui lòng điền đầy đủ thông tin.';
+      alert.style.display = 'flex';
+      alert.style.opacity = '1'; alert.style.transform = 'none';
+      alert.style.animation = 'slideIn 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+      return;
+    }
+    if (pass !== confirm) {
+      document.getElementById('register-alert-msg').textContent = 'Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.';
+      alert.style.display = 'flex';
+      alert.style.opacity = '1'; alert.style.transform = 'none';
+      return;
+    }
+    // Show demo error (password already used)
+    document.getElementById('register-alert-msg').innerHTML = `Mật khẩu này đã được sử dụng bởi <strong>${email}</strong>. Vui lòng chọn mật khẩu khác.`;
+    alert.style.display = 'flex';
+    alert.style.opacity = '1'; alert.style.transform = 'none';
+    alert.style.animation = 'slideIn 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+  }
+
+  function handleForgot(e) {
+    rippleEffect(e.currentTarget, e);
+    // Just demo — re-show the alert
+    const alert = document.getElementById('forgot-alert');
+    alert.style.display = 'flex';
+    alert.style.opacity = '1'; alert.style.transform = 'none';
+    alert.style.animation = 'slideIn 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+  }
+</script>
+</body>
+</html>

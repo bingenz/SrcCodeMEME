@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💻 FE ENGINEER FACTORY 💻</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&family=Rubik+Dirt&family=Black+Han+Sans&family=Boogaloo&family=Permanent+Marker&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ===================================================
+   RESET & VARIABLES
+=================================================== */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --c:  #00F5FF;
+  --h:  #FF006E;
+  --g:  #CCFF00;
+  --p:  #BF00FF;
+  --y:  #FFE600;
+  --o:  #FF6B00;
+  --gr: #00FF88;
+  --bg: #06080c;
+  --bg2:#0a0f14;
+}
+html{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ctext y='26' font-size='24'%3E💻%3C/text%3E%3C/svg%3E") 12 12,auto;}
+body{background:var(--bg);color:#fff;font-family:'Boogaloo',cursive;overflow-x:hidden;min-height:100vh;}
+
+/* ===================================================
+   GLOBAL OVERLAYS (GPU composited, pointer-events:none)
+=================================================== */
+
+/* 1. Scanlines */
+.overlay-scan{
+  position:fixed;inset:0;z-index:9995;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,245,255,0.025) 3px,rgba(0,245,255,0.025) 4px);
+}
+
+/* 2. Circuit / grid */
+.overlay-circuit{
+  position:fixed;inset:0;z-index:9994;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,245,255,0.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,255,0.035) 1px,transparent 1px),
+    linear-gradient(rgba(0,245,255,0.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,255,0.015) 1px,transparent 1px);
+  background-size:80px 80px,80px 80px,20px 20px,20px 20px;
+}
+
+/* 3. Horizontal glitch bars — pure CSS, no JS */
+.glitch-bar{
+  position:fixed;left:0;width:100%;pointer-events:none;z-index:9996;
+  height:3px;
+  background:linear-gradient(90deg,transparent,var(--c),var(--h),transparent);
+  opacity:0;
+  animation:barSlide 4s steps(1,end) infinite;
+  will-change:transform,opacity;
+}
+.glitch-bar:nth-child(1){top:20%;animation-delay:0s;  background:linear-gradient(90deg,transparent,var(--c),transparent);}
+.glitch-bar:nth-child(2){top:45%;animation-delay:1.3s;background:linear-gradient(90deg,transparent,var(--h),transparent);}
+.glitch-bar:nth-child(3){top:70%;animation-delay:2.7s;background:linear-gradient(90deg,transparent,var(--g),transparent);}
+.glitch-bar:nth-child(4){top:85%;animation-delay:0.8s;background:linear-gradient(90deg,transparent,var(--p),transparent);}
+.glitch-bar:nth-child(5){top:10%;animation-delay:3.5s;background:linear-gradient(90deg,transparent,var(--y),transparent);}
+@keyframes barSlide{
+  0%  {opacity:0;transform:translateX(-100%) scaleX(1);}
+  2%  {opacity:1;transform:translateX(-80%) scaleX(1.5);}
+  4%  {opacity:0.8;transform:translateX(0%) scaleX(0.8);}
+  6%  {opacity:0;transform:translateX(100%);}
+  100%{opacity:0;transform:translateX(100%);}
+}
+
+/* 4. CRT vignette */
+.overlay-vignette{
+  position:fixed;inset:0;z-index:9993;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,0.65) 100%);
+}
+
+/* 5. RGB aberration flash — fires rarely */
+.overlay-rgb{
+  position:fixed;inset:0;z-index:9997;pointer-events:none;
+  mix-blend-mode:screen;opacity:0;
+  animation:rgbFlash 7s steps(1) infinite;
+  background:linear-gradient(90deg,rgba(255,0,100,0.06),rgba(0,245,255,0.06));
+}
+@keyframes rgbFlash{
+  0%,96%,100%{opacity:0;transform:none;}
+  97%{opacity:1;transform:translateX(-4px);}
+  98%{opacity:0.5;transform:translateX(4px);}
+  99%{opacity:0;transform:none;}
+}
+
+/* 6. Pixel corruption blocks */
+.pixel-corrupt{
+  position:fixed;pointer-events:none;z-index:9996;
+  width:60px;height:4px;
+  animation:pixCorrupt 5s steps(1) infinite;
+  opacity:0;
+}
+.pixel-corrupt:nth-child(1){top:33%;left:10%;background:var(--c);animation-delay:0s;}
+.pixel-corrupt:nth-child(2){top:60%;left:70%;background:var(--h);animation-delay:1.8s;width:90px;}
+.pixel-corrupt:nth-child(3){top:15%;left:50%;background:var(--g);animation-delay:3.2s;width:40px;height:8px;}
+.pixel-corrupt:nth-child(4){top:78%;left:25%;background:var(--p);animation-delay:0.7s;width:120px;height:3px;}
+.pixel-corrupt:nth-child(5){top:50%;left:80%;background:var(--y);animation-delay:4.1s;width:30px;height:6px;}
+@keyframes pixCorrupt{
+  0%,94%,100%{opacity:0;}
+  95%{opacity:0.9;}
+  96%{opacity:0.4;}
+  97%{opacity:0.8;}
+  98%{opacity:0;}
+}
+
+/* ===================================================
+   FLOATING GEOMETRIC SHAPES
+=================================================== */
+.geo-shapes{position:fixed;inset:0;pointer-events:none;z-index:9990;overflow:hidden;}
+.geo{
+  position:absolute;opacity:0.12;
+  animation:geoFloat 6s ease-in-out infinite;
+  will-change:transform;
+}
+@keyframes geoFloat{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-20px) rotate(180deg);}}
+
+.geo-diamond{
+  width:24px;height:24px;
+  border:2px solid var(--c);
+  transform:rotate(45deg);
+}
+.geo-cross::before,.geo-cross::after{
+  content:'';position:absolute;background:var(--h);
+}
+.geo-cross{position:absolute;width:20px;height:20px;}
+.geo-cross::before{width:2px;height:100%;left:50%;transform:translateX(-50%);}
+.geo-cross::after{height:2px;width:100%;top:50%;transform:translateY(-50%);}
+.geo-circle{
+  border-radius:50%;
+  border:2px solid var(--g);
+}
+.geo-hex{
+  border:2px solid var(--p);
+  width:22px;height:22px;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+
+/* Position each shape */
+.g1{top:8%;left:5%;width:28px;height:28px;animation-delay:0s;animation-duration:5s;}
+.g2{top:15%;right:8%;animation-delay:0.8s;animation-duration:6.5s;opacity:0.1;}
+.g3{top:40%;left:3%;animation-delay:1.6s;animation-duration:4.5s;}
+.g4{top:60%;right:5%;animation-delay:2.4s;animation-duration:7s;}
+.g5{top:75%;left:8%;animation-delay:0.4s;animation-duration:5.5s;}
+.g6{top:30%;right:3%;animation-delay:3.2s;animation-duration:6s;}
+.g7{top:90%;right:10%;animation-delay:1.2s;animation-duration:4s;}
+.g8{top:50%;left:94%;animation-delay:2s;animation-duration:8s;}
+.g9{top:5%;left:45%;animation-delay:4s;animation-duration:5s;}
+.g10{top:95%;left:40%;animation-delay:0.6s;animation-duration:6s;}
+
+/* ===================================================
+   CORNER BRACKET DECORATIONS
+=================================================== */
+.corner-tl,.corner-tr,.corner-bl,.corner-br{
+  position:fixed;width:40px;height:40px;pointer-events:none;z-index:9992;
+  animation:cornerPulse 2s ease-in-out infinite alternate;
+}
+@keyframes cornerPulse{from{opacity:0.5;}to{opacity:1;filter:brightness(1.5);}}
+.corner-tl{top:8px;left:8px;border-top:3px solid var(--c);border-left:3px solid var(--c);}
+.corner-tr{top:8px;right:8px;border-top:3px solid var(--h);border-right:3px solid var(--h);animation-delay:.5s;}
+.corner-bl{bottom:8px;left:8px;border-bottom:3px solid var(--g);border-left:3px solid var(--g);animation-delay:1s;}
+.corner-br{bottom:8px;right:8px;border-bottom:3px solid var(--p);border-right:3px solid var(--p);animation-delay:1.5s;}
+
+/* ===================================================
+   KEYFRAMES — transform/opacity only (GPU safe)
+=================================================== */
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+@keyframes floatSpin{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-10px) rotate(180deg);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes spinSlow{to{transform:rotate(360deg);}}
+@keyframes shimmer{from{left:-70%}to{left:130%}}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes badgePop{from{transform:scale(1)}to{transform:scale(1.12);}}
+@keyframes ctaPulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 0 var(--c),0 0 30px var(--c);}
+  50%{transform:scale(1.05);box-shadow:0 0 0 14px transparent,0 0 60px var(--h),0 0 100px var(--p);}
+}
+@keyframes gradMove{from{background-position:0% center;}to{background-position:300% center;}}
+@keyframes meterGrow{from{width:0}}
+@keyframes popIn{
+  0%{opacity:0;transform:translateY(18px) scale(0.8);}
+  15%{opacity:1;transform:translateY(0) scale(1.06);}
+  80%{opacity:1;transform:translateY(-15px);}
+  100%{opacity:0;transform:translateY(-35px) scale(0.9);}
+}
+/* Neon flicker — step() = zero CPU */
+@keyframes flicker{
+  0%,18%,20%,55%,57%,100%{opacity:1;}
+  19%,56%{opacity:0.2;}
+}
+@keyframes flickerFast{
+  0%,48%,50%,72%,74%,100%{opacity:1;}
+  49%,73%{opacity:0;}
+}
+/* Diagonal stripe move */
+@keyframes stripeMove{from{background-position:0 0;}to{background-position:56px 0;}}
+
+/* Title glitch — only on ::before ::after pseudos, not the text itself */
+@keyframes titleGlitchBefore{
+  0%,85%,100%{clip-path:inset(0 0 100% 0);transform:translate(0);}
+  86%{clip-path:inset(20% 0 60% 0);transform:translate(-6px,0);}
+  88%{clip-path:inset(50% 0 30% 0);transform:translate(6px,0);}
+  90%{clip-path:inset(0 0 100% 0);transform:translate(0);}
+}
+@keyframes titleGlitchAfter{
+  0%,85%,100%{clip-path:inset(100% 0 0 0);transform:translate(0);}
+  87%{clip-path:inset(60% 0 20% 0);transform:translate(4px,0);}
+  89%{clip-path:inset(30% 0 50% 0);transform:translate(-4px,0);}
+  91%{clip-path:inset(100% 0 0 0);transform:translate(0);}
+}
+/* Section glitch jitter */
+@keyframes jitter{
+  0%,92%,100%{transform:none;}
+  93%{transform:translate(-3px,0) skew(-1deg);}
+  94%{transform:translate(3px,0) skew(1deg);}
+  95%{transform:none;}
+}
+@keyframes borderSpin{to{--angle:360deg;}}
+@property --angle{syntax:'<angle>';initial-value:0deg;inherits:false;}
+
+/* ===================================================
+   HEADER
+=================================================== */
+header{
+  position:relative;padding:10px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:2px solid var(--c);
+  background:linear-gradient(135deg,rgba(0,245,255,0.06),rgba(191,0,255,0.04));
+  overflow:hidden;
+}
+/* diagonal stripe behind header */
+header::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(60deg,transparent,transparent 8px,rgba(0,245,255,0.04) 8px,rgba(0,245,255,0.04) 9px);
+  animation:stripeMove 2s linear infinite;
+  pointer-events:none;
+}
+.logo{
+  font-family:'Rubik Glitch',cursive;
+  font-size:clamp(1.5rem,4vw,2.6rem);
+  background:linear-gradient(90deg,var(--c),var(--g),var(--h),var(--p),var(--c));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:300% auto;
+  animation:gradMove 2s linear infinite;
+  position:relative;z-index:1;
+  filter:drop-shadow(0 0 10px var(--c));
+  will-change:background-position;
+}
+.hbadges{display:flex;gap:8px;z-index:1;flex-wrap:wrap;justify-content:flex-end;}
+.badge{
+  font-family:'Black Han Sans',sans-serif;font-size:10px;
+  padding:4px 10px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;
+  animation:badgePop .5s ease-in-out infinite alternate;
+}
+.b1{background:var(--c);color:#000;box-shadow:0 0 14px var(--c);animation-delay:0s;}
+.b2{background:var(--g);color:#000;box-shadow:0 0 14px var(--g);animation-delay:.2s;}
+.b3{background:var(--h);color:#fff;box-shadow:0 0 14px var(--h);animation-delay:.4s;}
+
+/* ===================================================
+   TICKER
+=================================================== */
+.ticker{
+  background:#000;color:var(--c);
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;padding:5px 0;
+  overflow:hidden;white-space:nowrap;
+  border-top:1px solid var(--c);border-bottom:1px solid var(--h);
+  position:relative;
+}
+/* flicker effect on ticker text */
+.ticker-inner{
+  display:inline-block;
+  animation:scroll 25s linear infinite;
+  animation-play-state:running;
+}
+.ticker:hover .ticker-inner{animation-play-state:paused;}
+
+/* ===================================================
+   HERO
+=================================================== */
+.hero{
+  text-align:center;padding:55px 20px 30px;
+  position:relative;overflow:hidden;
+}
+
+/* Hero bg: diagonal rainbow stripes */
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    -45deg,
+    transparent,transparent 30px,
+    rgba(0,245,255,0.025) 30px,rgba(0,245,255,0.025) 31px,
+    transparent 31px,transparent 60px,
+    rgba(255,0,110,0.02) 60px,rgba(255,0,110,0.02) 61px
+  );
+  animation:stripeMove 3s linear infinite;
+  pointer-events:none;
+}
+
+/* decorative hex rings */
+.hero::after{
+  content:'';position:absolute;
+  width:500px;height:500px;
+  border:1px solid rgba(0,245,255,0.06);
+  border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:spin 20s linear infinite;
+  pointer-events:none;
+  box-shadow:
+    0 0 0 40px rgba(191,0,255,0.03),
+    0 0 0 80px rgba(0,245,255,0.02),
+    0 0 0 120px rgba(255,0,110,0.015);
+}
+
+.spin-ring{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;z-index:1;
+}
+.spin-ring-1{
+  width:300px;height:300px;border-radius:50%;
+  border:1px dashed rgba(0,245,255,0.12);
+  animation:spin 15s linear infinite;
+}
+.spin-ring-2{
+  width:420px;height:420px;border-radius:50%;
+  border:1px dashed rgba(255,0,110,0.08);
+  animation:spin 25s linear infinite reverse;
+}
+.spin-ring-3{
+  width:200px;height:200px;border-radius:50%;
+  border:2px solid rgba(204,255,0,0.07);
+  animation:spin 8s linear infinite;
+}
+
+/* floating emojis */
+.fe-wrap{position:absolute;inset:0;pointer-events:none;z-index:2;}
+.fe{position:absolute;font-size:clamp(1.2rem,3vw,2rem);animation:float 2.5s ease-in-out infinite;user-select:none;}
+.fe01{top:6%;left:4%;animation-duration:2.1s;animation-delay:0s;}
+.fe02{top:8%;right:5%;animation-duration:2.6s;animation-delay:.3s;}
+.fe03{top:42%;left:2%;animation-duration:1.9s;animation-delay:.6s;}
+.fe04{top:58%;right:3%;animation-duration:2.3s;animation-delay:.1s;}
+.fe05{top:78%;left:5%;animation-duration:2s;animation-delay:.4s;}
+.fe06{top:72%;right:6%;animation-duration:2.4s;animation-delay:.7s;}
+.fe07{top:25%;left:7%;animation-duration:2.2s;animation-delay:.2s;}
+.fe08{top:35%;right:7%;animation-duration:1.7s;animation-delay:.5s;}
+.fe09{top:90%;left:15%;animation-duration:2.8s;animation-delay:.9s;}
+.fe10{top:88%;right:15%;animation-duration:2s;animation-delay:1.1s;}
+
+/* ===================================================
+   HERO TITLE — READABLE, glitch only on pseudo-elements
+=================================================== */
+.hero-title-wrap{position:relative;display:inline-block;z-index:3;}
+.hero-title{
+  font-family:'Rubik Dirt',cursive;
+  font-size:clamp(2.5rem,10vw,7rem);
+  line-height:0.9;
+  color:var(--c);
+  display:block;
+  text-shadow:
+    0 0 20px var(--c),
+    0 0 60px rgba(0,245,255,0.4),
+    3px 3px 0 rgba(255,0,110,0.6),
+    -3px -3px 0 rgba(191,0,255,0.4);
+  position:relative;
+  letter-spacing:2px;
+}
+/* Glitch ghost layers — these twitch, the real text stays still */
+.hero-title::before{
+  content:attr(data-text);
+  position:absolute;inset:0;
+  color:var(--h);
+  text-shadow:3px 0 var(--h);
+  animation:titleGlitchBefore 6s steps(1) infinite;
+  pointer-events:none;
+  will-change:clip-path,transform;
+}
+.hero-title::after{
+  content:attr(data-text);
+  position:absolute;inset:0;
+  color:var(--g);
+  text-shadow:-3px 0 var(--g);
+  animation:titleGlitchAfter 6s steps(1) infinite;
+  pointer-events:none;
+  will-change:clip-path,transform;
+}
+/* KỸ SƯ label */
+.hero-label{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(.7rem,2vw,1.1rem);
+  letter-spacing:8px;
+  color:var(--g);
+  text-shadow:0 0 12px var(--g);
+  text-transform:uppercase;
+  display:block;
+  margin-bottom:6px;
+  animation:flicker 4s infinite;
+}
+.hero-label-2{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(.6rem,1.5vw,.9rem);
+  letter-spacing:4px;
+  color:var(--h);
+  text-shadow:0 0 8px var(--h);
+  display:block;
+  margin-top:8px;
+  animation:flickerFast 5s infinite;
+}
+
+.hero-sub{
+  font-family:'Permanent Marker',cursive;
+  font-size:clamp(.9rem,2.5vw,1.45rem);
+  margin:16px auto;max-width:640px;
+  position:relative;z-index:3;
+  background:linear-gradient(90deg,var(--c),var(--g),var(--h),var(--p),var(--c));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:250% auto;animation:gradMove 2.5s linear infinite;
+  filter:drop-shadow(0 0 6px rgba(0,245,255,0.5));
+  /* chromatic aberration via text-shadow workaround */
+}
+
+/* ===================================================
+   CTA BUTTON
+=================================================== */
+.cta-wrap{margin:20px auto;display:inline-block;position:relative;z-index:3;}
+.cta-btn{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(.95rem,2.5vw,1.45rem);
+  padding:16px 40px;
+  background:linear-gradient(135deg,var(--c),var(--p),var(--h),var(--c));
+  background-size:300% auto;
+  animation:gradMove 2s linear infinite,ctaPulse 1.3s ease-in-out infinite;
+  border:2px solid var(--g);border-radius:4px;
+  color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:3px;
+  position:relative;overflow:hidden;transition:filter .1s;
+  will-change:transform,box-shadow;
+}
+.cta-btn::before{
+  content:'';position:absolute;
+  top:-50%;left:-70%;width:40%;height:200%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,0.45),transparent);
+  animation:shimmer 1.5s linear infinite;
+}
+.cta-btn:hover{filter:brightness(1.4) saturate(2);}
+
+/* ===================================================
+   STATS BAR
+=================================================== */
+.stats{
+  display:flex;justify-content:center;flex-wrap:wrap;
+  margin:20px 0;
+  border-top:2px solid rgba(0,245,255,0.3);
+  border-bottom:2px solid rgba(0,245,255,0.3);
+  padding:16px 0;
+  position:relative;overflow:hidden;
+}
+/* diagonal stripe behind stats */
+.stats::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(0,245,255,0.02) 0px,rgba(0,245,255,0.02) 1px,transparent 1px,transparent 40px);
+  pointer-events:none;
+}
+.stat-item{
+  text-align:center;padding:10px 24px;
+  border-right:1px solid rgba(255,255,255,.08);
+  flex:1;min-width:120px;position:relative;
+  animation:jitter 8s infinite;
+}
+.stat-item:nth-child(1){animation-delay:0s;}
+.stat-item:nth-child(2){animation-delay:2s;}
+.stat-item:nth-child(3){animation-delay:4s;}
+.stat-item:nth-child(4){animation-delay:6s;}
+.stat-item:last-child{border-right:none;}
+.stat-num{
+  font-family:'Rubik Glitch',cursive;
+  font-size:clamp(1.6rem,4.5vw,2.8rem);
+  line-height:1;
+}
+.stat-item:nth-child(1) .stat-num{color:var(--g);text-shadow:0 0 16px var(--g),2px 2px 0 var(--h);}
+.stat-item:nth-child(2) .stat-num{color:var(--h);text-shadow:0 0 16px var(--h),2px 2px 0 var(--p);}
+.stat-item:nth-child(3) .stat-num{color:var(--c);text-shadow:0 0 16px var(--c),2px 2px 0 var(--g);}
+.stat-item:nth-child(4) .stat-num{color:var(--y);text-shadow:0 0 16px var(--y),2px 2px 0 var(--o);}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-top:5px;}
+
+/* ===================================================
+   SECTION TITLE — animated, NOT on the hero title
+=================================================== */
+.sec-title{
+  font-family:'Permanent Marker',cursive;
+  font-size:clamp(1.3rem,3.5vw,2rem);
+  text-align:center;margin:32px 0 18px;
+  display:block;position:relative;
+  animation:jitter 5s infinite;
+  will-change:transform;
+}
+.sec-title.c{color:var(--c);text-shadow:0 0 14px var(--c),4px 4px 0 var(--p);}
+.sec-title.g{color:var(--g);text-shadow:0 0 14px var(--g),4px 4px 0 var(--h);}
+.sec-title.h{color:var(--h);text-shadow:0 0 14px var(--h),4px 4px 0 var(--c);}
+/* decor lines either side */
+.sec-title::before,.sec-title::after{
+  content:'';display:inline-block;
+  width:clamp(20px,5vw,60px);height:2px;
+  vertical-align:middle;margin:0 10px;
+  animation:gradMove 2s linear infinite;
+  background:linear-gradient(90deg,var(--c),var(--h),var(--g));
+  background-size:200% auto;
+}
+
+/* ===================================================
+   TECH PILLS
+=================================================== */
+.tech-wrap{max-width:900px;margin:0 auto 4px;padding:0 16px;text-align:center;}
+.tech-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px;}
+.tp{
+  font-family:'Black Han Sans',sans-serif;font-size:11px;
+  padding:6px 15px;border-radius:2px;letter-spacing:1px;border:1px solid;
+  transition:transform .15s,box-shadow .15s;cursor:default;text-transform:uppercase;
+  animation:float 3s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.tp::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,0.12),transparent);
+  animation:shimmer 2s linear infinite;
+}
+.tp:hover{transform:scale(1.15) translateY(-4px);}
+.tp-r{color:var(--c);border-color:var(--c);background:rgba(0,245,255,.07);animation-delay:0s;}
+.tp-t{color:#60a5fa;border-color:#60a5fa;background:rgba(96,165,250,.07);animation-delay:.2s;}
+.tp-c{color:var(--h);border-color:var(--h);background:rgba(255,0,110,.07);animation-delay:.4s;}
+.tp-n{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);animation-delay:.6s;}
+.tp-w{color:#38BDF8;border-color:#38BDF8;background:rgba(56,189,248,.07);animation-delay:.8s;}
+.tp-no{color:var(--gr);border-color:var(--gr);background:rgba(0,255,136,.07);animation-delay:1s;}
+.tp-g{color:var(--o);border-color:var(--o);background:rgba(255,107,0,.07);animation-delay:1.2s;}
+.tp-f{color:var(--p);border-color:var(--p);background:rgba(191,0,255,.07);animation-delay:1.4s;}
+.tp-v{color:var(--y);border-color:var(--y);background:rgba(255,230,0,.07);animation-delay:1.6s;}
+.tp-w2{color:var(--gr);border-color:var(--gr);background:rgba(0,255,136,.05);animation-delay:1.8s;}
+
+/* ===================================================
+   CARDS
+=================================================== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(265px,1fr));
+  gap:14px;padding:0 16px 16px;
+  max-width:1200px;margin:0 auto;
+}
+.card{
+  position:relative;border-radius:6px;overflow:hidden;
+  cursor:pointer;transition:transform .15s ease;
+  animation:jitter 10s infinite;
+}
+.card:nth-child(1){animation-delay:0s;}
+.card:nth-child(2){animation-delay:1.5s;}
+.card:nth-child(3){animation-delay:3s;}
+.card:nth-child(4){animation-delay:4.5s;}
+.card:nth-child(5){animation-delay:6s;}
+.card:nth-child(6){animation-delay:7.5s;}
+.card:hover{transform:scale(1.05) rotate(0.8deg);}
+.card:nth-child(even):hover{transform:scale(1.05) rotate(-0.8deg);}
+.card::before{
+  content:'';position:absolute;inset:-2px;border-radius:8px;padding:2px;
+  background:linear-gradient(var(--angle,0deg),var(--c1,#00F5FF),var(--c2,#CCFF00),var(--c3,#FF006E));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:borderSpin 4s linear infinite;
+}
+.card:nth-child(1){--c1:#00F5FF;--c2:#CCFF00;--c3:#BF00FF}
+.card:nth-child(2){--c1:#FF006E;--c2:#FFE600;--c3:#00F5FF}
+.card:nth-child(3){--c1:#CCFF00;--c2:#FF006E;--c3:#00FF88}
+.card:nth-child(4){--c1:#BF00FF;--c2:#00F5FF;--c3:#FFE600}
+.card:nth-child(5){--c1:#FFE600;--c2:#00FF88;--c3:#FF006E}
+.card:nth-child(6){--c1:#00FF88;--c2:#BF00FF;--c3:#CCFF00}
+.card-inner{
+  background:linear-gradient(135deg,#0c1018,#0a0d12);
+  border-radius:4px;padding:18px;height:100%;position:relative;
+}
+/* diagonal stripes on card bg */
+.card-inner::before{
+  content:'';position:absolute;inset:0;border-radius:4px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,0.012) 20px,rgba(255,255,255,0.012) 21px);
+  pointer-events:none;
+}
+.card-emoji{font-size:2.5rem;display:block;margin-bottom:8px;animation:floatSpin 4s ease-in-out infinite;}
+.card:nth-child(2) .card-emoji{animation-delay:.5s;}
+.card:nth-child(3) .card-emoji{animation-delay:1s;}
+.card:nth-child(4) .card-emoji{animation-delay:1.5s;}
+.card:nth-child(5) .card-emoji{animation-delay:2s;}
+.card:nth-child(6) .card-emoji{animation-delay:2.5s;}
+.card-title{font-family:'Black Han Sans',sans-serif;font-size:1rem;margin-bottom:6px;letter-spacing:.5px;}
+.card:nth-child(1) .card-title{color:var(--c);text-shadow:0 0 8px var(--c);}
+.card:nth-child(2) .card-title{color:var(--h);text-shadow:0 0 8px var(--h);}
+.card:nth-child(3) .card-title{color:var(--g);text-shadow:0 0 8px var(--g);}
+.card:nth-child(4) .card-title{color:var(--p);text-shadow:0 0 8px var(--p);}
+.card:nth-child(5) .card-title{color:var(--y);text-shadow:0 0 8px var(--y);}
+.card:nth-child(6) .card-title{color:var(--gr);text-shadow:0 0 8px var(--gr);}
+.card-desc{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.65;}
+.card-tag{
+  display:inline-block;margin-top:10px;font-size:10px;
+  padding:3px 10px;border-radius:2px;
+  font-family:'Black Han Sans',sans-serif;letter-spacing:1px;
+}
+.card:nth-child(1) .card-tag{background:rgba(0,245,255,.1);color:var(--c);border:1px solid var(--c);}
+.card:nth-child(2) .card-tag{background:rgba(255,0,110,.1);color:var(--h);border:1px solid var(--h);}
+.card:nth-child(3) .card-tag{background:rgba(204,255,0,.1);color:var(--g);border:1px solid var(--g);}
+.card:nth-child(4) .card-tag{background:rgba(191,0,255,.1);color:var(--p);border:1px solid var(--p);}
+.card:nth-child(5) .card-tag{background:rgba(255,230,0,.1);color:var(--y);border:1px solid var(--y);}
+.card:nth-child(6) .card-tag{background:rgba(0,255,136,.1);color:var(--gr);border:1px solid var(--gr);}
+
+/* ===================================================
+   MARQUEE (CSS scroll, no JS)
+=================================================== */
+.mq-wrap{
+  overflow:hidden;padding:12px 0;
+  background:linear-gradient(90deg,#040810,#0b0018,#040810);
+  border-top:2px solid var(--c);border-bottom:2px solid var(--h);
+  margin:26px 0;position:relative;
+}
+/* flicker overlay on marquee */
+.mq-wrap::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(0,245,255,0.04) 0,rgba(0,245,255,0.04) 1px,transparent 1px,transparent 60px);
+  pointer-events:none;animation:stripeMove 1s linear infinite;
+}
+.mq-track{
+  display:flex;gap:0;white-space:nowrap;
+  /* duplicate content inline — pure CSS scroll */
+  animation:scroll 18s linear infinite;
+  will-change:transform;
+}
+.mq-item{
+  font-family:'Black Han Sans',sans-serif;font-size:.9rem;
+  color:var(--c);text-transform:uppercase;letter-spacing:2px;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:0 28px;flex-shrink:0;
+}
+.mq-item:nth-child(4n+1){color:var(--c);}
+.mq-item:nth-child(4n+2){color:var(--h);}
+.mq-item:nth-child(4n+3){color:var(--g);}
+.mq-item:nth-child(4n){color:var(--p);}
+
+/* ===================================================
+   SKILL METERS
+=================================================== */
+.meters-wrap{max-width:680px;margin:0 auto 30px;padding:0 16px;}
+.meter-title{
+  font-family:'Rubik Dirt',cursive;
+  font-size:clamp(1.2rem,3.5vw,1.8rem);
+  color:var(--c);text-align:center;margin-bottom:16px;
+  text-shadow:3px 3px 0 var(--p);
+  animation:jitter 4s infinite;
+}
+.mrow{margin-bottom:14px;}
+.mlabel{
+  font-family:'Share Tech Mono',monospace;font-size:12.5px;
+  display:flex;justify-content:space-between;margin-bottom:5px;
+}
+.mlabel span:first-child{color:rgba(255,255,255,.7);}
+.mtrack{
+  height:14px;background:rgba(255,255,255,.05);
+  border-radius:2px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+  position:relative;
+}
+.mfill{
+  height:100%;border-radius:2px;
+  animation:meterGrow 2s cubic-bezier(.34,1.56,.64,1) both;
+  position:relative;overflow:hidden;
+}
+.mfill::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 8px,rgba(255,255,255,.2) 8px,rgba(255,255,255,.2) 10px);
+  animation:stripeMove .6s linear infinite;
+}
+.m1{width:99%;background:linear-gradient(90deg,var(--c),var(--g));box-shadow:0 0 12px var(--c);animation-delay:.1s;}
+.m2{width:96%;background:linear-gradient(90deg,var(--h),var(--o));box-shadow:0 0 12px var(--h);animation-delay:.2s;}
+.m3{width:92%;background:linear-gradient(90deg,var(--p),var(--h));box-shadow:0 0 12px var(--p);animation-delay:.3s;}
+.m4{width:88%;background:linear-gradient(90deg,var(--g),var(--c));box-shadow:0 0 12px var(--g);animation-delay:.4s;}
+.m5{width:100%;background:linear-gradient(90deg,var(--y),var(--o),var(--h));box-shadow:0 0 12px var(--y);animation-delay:.5s;}
+
+/* ===================================================
+   POPUP
+=================================================== */
+.popup{position:fixed;z-index:10000;pointer-events:none;}
+.popup-inner{
+  background:rgba(6,10,18,.95);color:#fff;
+  padding:10px 16px;border-radius:3px;font-size:12.5px;
+  font-family:'Share Tech Mono',monospace;
+  border:1px solid var(--c);box-shadow:0 0 20px var(--c),inset 0 0 20px rgba(0,245,255,.04);
+  animation:popIn 3s ease-in-out forwards;white-space:nowrap;
+}
+
+/* ===================================================
+   NEON DIVIDER
+=================================================== */
+.neon-divider{
+  height:2px;margin:0;
+  background:linear-gradient(90deg,transparent,var(--c),var(--h),var(--g),var(--p),transparent);
+  background-size:200% auto;
+  animation:gradMove 3s linear infinite;
+  box-shadow:0 0 12px rgba(0,245,255,.5);
+}
+
+/* ===================================================
+   DECORATIVE CODE BLOCK
+=================================================== */
+.code-deco{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:rgba(0,245,255,.3);text-align:left;
+  padding:16px;max-width:700px;margin:0 auto 8px;
+  border-left:2px solid rgba(0,245,255,.2);
+  animation:jitter 6s infinite;line-height:1.9;
+}
+.code-deco .k{color:rgba(191,0,255,.5);}
+.code-deco .s{color:rgba(204,255,0,.4);}
+.code-deco .c{color:rgba(0,245,255,.3);}
+.code-deco .v{color:rgba(255,0,110,.4);}
+
+/* ===================================================
+   FOOTER
+=================================================== */
+footer{
+  text-align:center;padding:24px 20px;
+  font-family:'Permanent Marker',cursive;
+  background:linear-gradient(0deg,rgba(0,245,255,.06),transparent);
+  border-top:2px solid var(--c);
+  position:relative;overflow:hidden;
+}
+footer::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(60deg,transparent,transparent 20px,rgba(0,245,255,0.02) 20px,rgba(0,245,255,0.02) 21px);
+  animation:stripeMove 4s linear infinite;
+  pointer-events:none;
+}
+.footer-text{
+  font-size:1.1rem;
+  background:linear-gradient(90deg,var(--c),var(--g),var(--h),var(--c));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% auto;animation:gradMove 2s linear infinite;
+  position:relative;z-index:1;
+}
+.footer-sub{font-size:11px;color:rgba(255,255,255,.25);font-family:'Share Tech Mono',monospace;margin-top:6px;position:relative;z-index:1;}
+
+/* ===================================================
+   CANVAS (code rain)
+=================================================== */
+#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9989;pointer-events:none;opacity:.055;}
+
+/* ===================================================
+   RESPONSIVE
+=================================================== */
+@media(max-width:600px){
+  .stat-item{min-width:calc(50% - 1px);border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}
+  .stat-item:nth-child(odd){border-right:1px solid rgba(255,255,255,.06);}
+  .hero{padding:40px 10px 20px;}
+  .fe{font-size:1.1rem;}
+  .spin-ring-1,.spin-ring-2{display:none;}
+  .corner-tl,.corner-tr,.corner-bl,.corner-br{width:28px;height:28px;}
+  .code-deco{font-size:10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- CANVAS CODE RAIN -->
+<canvas id="rain"></canvas>
+
+<!-- OVERLAYS -->
+<div class="overlay-scan"></div>
+<div class="overlay-circuit"></div>
+<div class="overlay-vignette"></div>
+<div class="overlay-rgb"></div>
+
+<!-- GLITCH BARS -->
+<div class="glitch-bar"></div>
+<div class="glitch-bar"></div>
+<div class="glitch-bar"></div>
+<div class="glitch-bar"></div>
+<div class="glitch-bar"></div>
+
+<!-- PIXEL CORRUPTION -->
+<div class="pixel-corrupt"></div>
+<div class="pixel-corrupt"></div>
+<div class="pixel-corrupt"></div>
+<div class="pixel-corrupt"></div>
+<div class="pixel-corrupt"></div>
+
+<!-- CORNER BRACKETS -->
+<div class="corner-tl"></div>
+<div class="corner-tr"></div>
+<div class="corner-bl"></div>
+<div class="corner-br"></div>
+
+<!-- FLOATING GEOMETRIC SHAPES -->
+<div class="geo-shapes">
+  <div class="geo geo-diamond g1" style="border-color:var(--c)"></div>
+  <div class="geo geo-circle g2" style="width:30px;height:30px;border-color:var(--h)"></div>
+  <div class="geo geo-hex g3" style="border-color:var(--g)"></div>
+  <div class="geo geo-diamond g4" style="border-color:var(--p)"></div>
+  <div class="geo geo-circle g5" style="width:20px;height:20px;border-color:var(--y)"></div>
+  <div class="geo geo-hex g6" style="border-color:var(--c)"></div>
+  <div class="geo geo-diamond g7" style="border-color:var(--h)"></div>
+  <div class="geo geo-circle g8" style="width:26px;height:26px;border-color:var(--gr)"></div>
+  <div class="geo geo-hex g9" style="border-color:var(--o)"></div>
+  <div class="geo geo-diamond g10" style="border-color:var(--p)"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">💻 FE.ENGINEER 💻</div>
+  <div class="hbadges">
+    <span class="badge b1">🟢 ONLINE</span>
+    <span class="badge b2">⚡ SHIPPING</span>
+    <span class="badge b3">🔥 DEBUGGING</span>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker">
+  <span class="ticker-inner">
+    &nbsp;&nbsp;
+    &gt;&gt; CSS KHÔNG PHẢI LẬP TRÌNH &nbsp;|&nbsp; WORKS ON MY MACHINE ™ &nbsp;|&nbsp; npm install → 999 vulnerabilities &nbsp;|&nbsp; INTERNET EXPLORER ĐÃ VỀ CÕI &nbsp;|&nbsp; TÔI FIX BUG, THÊM 10 BUG MỚI &nbsp;|&nbsp; DEPLOY THỨ 6 17:00 KHÔNG SỢ &nbsp;|&nbsp; CLIENT: "CHỈ ĐỔI MÀU THÔI" → 3 ngày &nbsp;|&nbsp; LIGHTHOUSE 100/100 ??? &nbsp;|&nbsp; z-index: 9999999; — vẫn bị che &nbsp;|&nbsp; SEMICOLON ĐÂU RỒI??? &nbsp;|&nbsp;
+    &gt;&gt; CSS KHÔNG PHẢI LẬP TRÌNH &nbsp;|&nbsp; WORKS ON MY MACHINE ™ &nbsp;|&nbsp; npm install → 999 vulnerabilities &nbsp;|&nbsp; INTERNET EXPLORER ĐÃ VỀ CÕI &nbsp;|&nbsp; TÔI FIX BUG, THÊM 10 BUG MỚI &nbsp;|&nbsp; DEPLOY THỨ 6 17:00 KHÔNG SỢ &nbsp;|&nbsp; CLIENT: "CHỈ ĐỔI MÀU THÔI" → 3 ngày &nbsp;|&nbsp; LIGHTHOUSE 100/100 ??? &nbsp;|&nbsp; z-index: 9999999; — vẫn bị che &nbsp;|&nbsp; SEMICOLON ĐÂU RỒI??? &nbsp;|&nbsp;
+  </span>
+</div>
+<div class="neon-divider"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="spin-ring spin-ring-1"></div>
+  <div class="spin-ring spin-ring-2"></div>
+  <div class="spin-ring spin-ring-3"></div>
+  <div class="fe-wrap">
+    <span class="fe fe01">⚛️</span>
+    <span class="fe fe02">🎨</span>
+    <span class="fe fe03">💡</span>
+    <span class="fe fe04">🚀</span>
+    <span class="fe fe05">💀</span>
+    <span class="fe fe06">☕</span>
+    <span class="fe fe07">⚡</span>
+    <span class="fe fe08">🔥</span>
+    <span class="fe fe09">🤡</span>
+    <span class="fe fe10">💻</span>
+  </div>
+  <div class="hero-title-wrap">
+    <span class="hero-label">[ XIN CHÀO · TÔI LÀ ]</span>
+    <div class="hero-title" data-text="KỸ SƯ&#10;FRONT-END&#10;XỊN NHẤT">KỸ SƯ<br>FRONT-END<br>XỊN NHẤT</div>
+    <span class="hero-label-2">// VIỆT NAM · 2025 · NO CAP</span>
+  </div>
+  <p class="hero-sub">React · TypeScript · CSS · Drama · Bug · Coffee ☕</p>
+  <div class="cta-wrap">
+    <button class="cta-btn" onclick="triggerPopup()">💻 HIRE ME · NẾU BẠN DÁM 💻</button>
+  </div>
+</section>
+
+<div class="neon-divider"></div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-item">
+    <div class="stat-num" id="s1">0</div>
+    <div class="stat-label">// commits</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="s2">0</div>
+    <div class="stat-label">// bugs_fixed</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="s3">0</div>
+    <div class="stat-label">// coffee_cups</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="s4">0</div>
+    <div class="stat-label">// css_cursed</div>
+  </div>
+</div>
+
+<!-- DECORATIVE CODE BLOCK -->
+<div class="code-deco">
+  <span class="k">const</span> <span class="c">engineer</span> = {<br>
+  &nbsp;&nbsp;<span class="s">name</span>: <span class="v">"KỸ SƯ FRONT-END"</span>,<br>
+  &nbsp;&nbsp;<span class="s">stack</span>: [<span class="v">"React"</span>, <span class="v">"TypeScript"</span>, <span class="v">"CSS"</span>, <span class="v">"Coffee"</span>],<br>
+  &nbsp;&nbsp;<span class="s">bugs</span>: <span class="v">Infinity</span>,<br>
+  &nbsp;&nbsp;<span class="s">deploysOnFriday</span>: <span class="v">true</span> <span class="k">/* 💀 */</span><br>
+  };
+</div>
+
+<!-- TECH STACK -->
+<div class="sec-title c">🛠️ TECH STACK 🛠️</div>
+<div class="tech-wrap">
+  <div class="tech-pills">
+    <span class="tp tp-r">⚛️ React</span>
+    <span class="tp tp-t">📘 TypeScript</span>
+    <span class="tp tp-c">🎨 CSS/SCSS</span>
+    <span class="tp tp-n">▲ Next.js</span>
+    <span class="tp tp-w">🌊 Tailwind</span>
+    <span class="tp tp-no">🟢 Node.js</span>
+    <span class="tp tp-g">🔶 Git/GitHub</span>
+    <span class="tp tp-f">🎭 Figma</span>
+    <span class="tp tp-v">⚡ Vite</span>
+    <span class="tp tp-w2">🧪 Vitest</span>
+  </div>
+</div>
+
+<div class="neon-divider" style="margin:24px 0;"></div>
+
+<!-- CARDS -->
+<div class="sec-title g">🎯 KỸ NĂNG ĐỈNH CAO 🎯</div>
+<div class="grid">
+  <div class="card">
+    <div class="card-inner">
+      <span class="card-emoji">⚛️</span>
+      <div class="card-title">REACT MASTER</div>
+      <div class="card-desc">useState, useEffect, useMemo, useCallback, useRef... dùng hết không hiểu tại sao. Re-render đã hết chưa nhỉ?</div>
+      <span class="card-tag">HOOK ADDICT</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-inner">
+      <span class="card-emoji">🎨</span>
+      <div class="card-title">CSS BLACK MAGIC</div>
+      <div class="card-desc">Căn giữa div mất 2 tiếng. Flexbox, Grid, absolute. Đôi khi !important là bạn thân nhất trong đời.</div>
+      <span class="card-tag">PIXEL PERFECT</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-inner">
+      <span class="card-emoji">⚡</span>
+      <div class="card-title">PERFORMANCE OPT</div>
+      <div class="card-desc">Lazy load, code split, memo, Lighthouse 100. Xong rồi client thêm carousel banner là về 40 ngay.</div>
+      <span class="card-tag">LIGHTHOUSE 💯</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-inner">
+      <span class="card-emoji">💀</span>
+      <div class="card-title">BUG HUNTER</div>
+      <div class="card-desc">console.log('here') là debug tool số 1. debugger à? Không cần. Works on my machine là đủ sống.</div>
+      <span class="card-tag">CONSOLE.LOG CEO</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-inner">
+      <span class="card-emoji">📱</span>
+      <div class="card-title">RESPONSIVE KING</div>
+      <div class="card-desc">Mobile first. Breakpoint mọi nơi. Nhưng test trên Galaxy Fold là vỡ hết. QA phát hiện mới biết.</div>
+      <span class="card-tag">MOBILE FIRST 🤡</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-inner">
+      <span class="card-emoji">🚀</span>
+      <div class="card-title">DEPLOY WARRIOR</div>
+      <div class="card-desc">Vercel, Netlify, CI/CD đủ hết. Deploy 5 giờ chiều thứ 6. Cầu nguyện. Thường là có bug mới.</div>
+      <span class="card-tag">DEPLOY AT 5PM 😱</span>
+    </div>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="mq-wrap">
+  <div class="mq-track">
+    <span class="mq-item">⚛️ REACT DEV</span>
+    <span class="mq-item">🎨 CSS WIZARD</span>
+    <span class="mq-item">📘 TYPESCRIPT</span>
+    <span class="mq-item">🔥 NEXT.JS</span>
+    <span class="mq-item">💀 WORKS ON MY MACHINE</span>
+    <span class="mq-item">⚡ VITE + HMR</span>
+    <span class="mq-item">☕ COFFEE DRIVEN DEV</span>
+    <span class="mq-item">🤡 SHIP IT</span>
+    <span class="mq-item">🚀 DEPLOY FRI 5PM</span>
+    <span class="mq-item">💻 FE ENGINEER</span>
+    <!-- duplicate for seamless -->
+    <span class="mq-item">⚛️ REACT DEV</span>
+    <span class="mq-item">🎨 CSS WIZARD</span>
+    <span class="mq-item">📘 TYPESCRIPT</span>
+    <span class="mq-item">🔥 NEXT.JS</span>
+    <span class="mq-item">💀 WORKS ON MY MACHINE</span>
+    <span class="mq-item">⚡ VITE + HMR</span>
+    <span class="mq-item">☕ COFFEE DRIVEN DEV</span>
+    <span class="mq-item">🤡 SHIP IT</span>
+    <span class="mq-item">🚀 DEPLOY FRI 5PM</span>
+    <span class="mq-item">💻 FE ENGINEER</span>
+  </div>
+</div>
+
+<!-- SKILL METERS -->
+<div class="meters-wrap">
+  <div class="meter-title">📊 SKILL_METER.exe</div>
+  <div class="mrow">
+    <div class="mlabel"><span>⚛️ React / Next.js</span><span style="color:var(--c)">99%</span></div>
+    <div class="mtrack"><div class="mfill m1"></div></div>
+  </div>
+  <div class="mrow">
+    <div class="mlabel"><span>🎨 CSS Black Magic</span><span style="color:var(--h)">96%</span></div>
+    <div class="mtrack"><div class="mfill m2"></div></div>
+  </div>
+  <div class="mrow">
+    <div class="mlabel"><span>📘 TypeScript</span><span style="color:var(--p)">92%</span></div>
+    <div class="mtrack"><div class="mfill m3"></div></div>
+  </div>
+  <div class="mrow">
+    <div class="mlabel"><span>⚡ Performance / Web Vitals</span><span style="color:var(--g)">88%</span></div>
+    <div class="mtrack"><div class="mfill m4"></div></div>
+  </div>
+  <div class="mrow">
+    <div class="mlabel"><span>☕ Uống Cà Phê</span><span style="color:var(--y)">∞</span></div>
+    <div class="mtrack"><div class="mfill m5"></div></div>
+  </div>
+</div>
+
+<div class="neon-divider"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-text">💻 FE ENGINEER FACTORY © 2025 · WORKS ON MY MACHINE 💻</div>
+  <div class="footer-sub">// không chịu trách nhiệm nếu IE không hiển thị đúng · z-index: 9999 mãi mãi</div>
+</footer>
+
+<!-- POPUP CONTAINER -->
+<div id="pc"></div>
+
+<script>
+/* ===================================================
+   CODE RAIN — capped 12fps, RAF
+=================================================== */
+(function(){
+  const cv = document.getElementById('rain');
+  const cx = cv.getContext('2d');
+  let cols, drops;
+  const chars = 'ReactTSCSSNextTailwindGitVite{}[]()=>const let var function return import export async await'.split('');
+  function resize(){
+    cv.width = window.innerWidth;
+    cv.height = window.innerHeight;
+    cols = Math.floor(cv.width/22);
+    drops = Array.from({length:cols},()=>Math.random()*-cv.height/16);
+  }
+  let last=0;
+  function draw(t){
+    if(t-last<85){requestAnimationFrame(draw);return;}
+    last=t;
+    cx.fillStyle='rgba(6,8,12,0.22)';
+    cx.fillRect(0,0,cv.width,cv.height);
+    cx.fillStyle='#00F5FF';
+    cx.font='13px monospace';
+    for(let i=0;i<drops.length;i++){
+      cx.fillText(chars[Math.floor(Math.random()*chars.length)],i*22,drops[i]*16);
+      if(drops[i]*16>cv.height&&Math.random()>.975) drops[i]=0;
+      drops[i]++;
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  requestAnimationFrame(draw);
+})();
+
+/* ===================================================
+   COUNT UP
+=================================================== */
+function countUp(id,target,sfx,dur){
+  const el=document.getElementById(id);
+  let v=0;const step=target/(dur/16);
+  const t=setInterval(()=>{
+    v=Math.min(v+step,target);
+    el.textContent=Math.floor(v).toLocaleString('vi')+sfx;
+    if(v>=target)clearInterval(t);
+  },16);
+}
+setTimeout(()=>{
+  countUp('s1',4231,'',2000);
+  countUp('s2',9999,'+',2200);
+  countUp('s3',2847,'',1800);
+  countUp('s4',666,'',2500);
+},300);
+
+/* ===================================================
+   POPUPS
+=================================================== */
+const msgs=[
+  '⚡ Push code lên prod thành công!',
+  '💀 IE11 có bug mới bro ơi!',
+  '🚀 Lighthouse: 100 / 100 / 100 / 100!',
+  '🤡 Client muốn đổi font lần thứ 9!',
+  '☕ Hết cà phê... không code được!',
+  '😱 Merge conflict lúc 4:58PM!',
+  '💻 npm ci → 1,247 packages installed',
+  '🔥 CSS tự fix rồi... không ai hiểu!',
+  '⚛️ useEffect chạy vô tận bro ơi!',
+  '📘 TypeScript error: any is not allowed',
+  '🎨 Design nói "chỉ dịch 2px thôi"!',
+];
+function spawnPopup(){
+  const c=document.getElementById('pc');
+  const d=document.createElement('div');
+  d.className='popup';
+  d.style.cssText=`left:${5+Math.random()*58}vw;bottom:${8+Math.random()*38}vh`;
+  d.innerHTML=`<div class="popup-inner">${msgs[Math.floor(Math.random()*msgs.length)]}</div>`;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),3100);
+}
+function triggerPopup(){spawnPopup();}
+setInterval(spawnPopup,3800);
+setTimeout(spawnPopup,900);
+</script>
+</body>
+</html>
