@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tìm Điện Thoại Bị Mất</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --card: #13162a;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --glow: #4f6ef780;
+    --text: #e8eaf6;
+    --muted: #8b90b8;
+    --border: #1e2245;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, #4f6ef720 0%, transparent 70%);
+    top: -200px; left: -200px;
+    animation: orb1 12s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, #7c3aed18 0%, transparent 70%);
+    bottom: -150px; right: -150px;
+    animation: orb2 15s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  @keyframes orb1 { from { transform: translate(0,0); } to { transform: translate(100px, 80px); } }
+  @keyframes orb2 { from { transform: translate(0,0); } to { transform: translate(-80px, -60px); } }
+
+  .app {
+    width: 380px;
+    min-height: 680px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 40px 80px #00000060, 0 0 0 1px #ffffff08 inset;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0f1120;
+  }
+  .header-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header-info { flex: 1; }
+  .header-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+  .header-sub { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .status-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: #10b98115; border: 1px solid #10b98130;
+    padding: 5px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500; color: var(--success);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+
+  /* Pages */
+  .pages { position: relative; flex: 1; }
+  .page {
+    position: absolute; inset: 0;
+    padding: 32px 28px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px;
+    opacity: 0; transform: translateX(30px);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+  }
+  .page.active {
+    opacity: 1; transform: translateX(0);
+    pointer-events: all;
+    position: relative;
+  }
+
+  /* Page 1 — Landing */
+  .shield-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #1e2a6e, #2d1b6e);
+    border: 1px solid #4f6ef740;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    box-shadow: 0 0 40px #4f6ef730;
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .page-desc {
+    font-size: 14px; color: var(--muted);
+    text-align: center; line-height: 1.6;
+    max-width: 280px;
+  }
+
+  .btn-primary {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 14px;
+    color: white; font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center; gap: 10px;
+    position: relative; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 30px #4f6ef740;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px #4f6ef760; }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary::after {
+    content: ''; position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, #ffffff20, transparent);
+    transition: left 0.5s;
+  }
+  .btn-primary:hover::after { left: 100%; }
+
+  .no-login {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* Page 2 — Search */
+  .device-info {
+    width: 100%; display: flex; justify-content: space-between;
+    background: #0f1120; border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 18px;
+  }
+  .di-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .di-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+
+  .search-circle {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 0 0 0 #4f6ef760;
+    transition: transform 0.2s;
+  }
+  .search-circle:hover { transform: scale(1.05); }
+  .search-circle.searching {
+    animation: sonar 1.5s infinite;
+  }
+  @keyframes sonar {
+    0% { box-shadow: 0 0 0 0 #4f6ef760; }
+    70% { box-shadow: 0 0 0 40px #4f6ef700; }
+    100% { box-shadow: 0 0 0 0 #4f6ef700; }
+  }
+  .search-circle-icon { font-size: 40px; }
+  .search-circle-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* Page 3 — Found */
+  .found-icon {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, #1e4a6e, #1b3d6e);
+    border: 1px solid #4f6ef740;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    box-shadow: 0 0 40px #4f6ef730;
+  }
+  .found-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px; font-weight: 800;
+    text-align: center;
+  }
+  .found-desc { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.6; max-width: 260px; }
+  .found-desc strong { color: var(--text); }
+
+  .btn-confirm {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 14px;
+    color: white; font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 30px #4f6ef740;
+  }
+  .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 12px 40px #4f6ef760; }
+
+  .privacy-note {
+    font-size: 11px; color: var(--muted);
+    text-align: center; line-height: 1.5;
+    max-width: 260px;
+  }
+
+  /* Page 4 — Map */
+  .map-container {
+    width: 100%; height: 220px;
+    border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+    background: #0f1829;
+  }
+  .map-svg { width: 100%; height: 100%; }
+  .map-pin {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -100%);
+    font-size: 36px;
+    filter: drop-shadow(0 4px 12px #4f6ef780);
+    animation: bounce 1.5s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translate(-50%,-100%)} 50%{transform:translate(-50%,-115%)} }
+
+  .location-card {
+    width: 100%; background: #0f1120;
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .location-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+  .location-addr { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+  .location-time { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .accuracy-bar {
+    display: flex; align-items: center; gap: 8px; margin-top: 8px;
+  }
+  .acc-label { font-size: 11px; color: var(--muted); }
+  .acc-dots { display: flex; gap: 3px; }
+  .acc-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+  }
+  .acc-dot.empty { background: var(--border); }
+
+  /* Footer */
+  .footer {
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: #0f1120;
+  }
+  .footer-brand {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--muted);
+    font-weight: 600;
+  }
+  .footer-mode {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Progress dots */
+  .dots {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 3px;
+    background: var(--border); transition: all 0.3s;
+  }
+  .dot.active { width: 20px; background: var(--accent); }
+
+  /* Searching state */
+  .spinner {
+    width: 24px; height: 24px;
+    border: 2px solid #ffffff30;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes ring { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(1.4);opacity:0} }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-avatar">👤</div>
+    <div class="header-info">
+      <div class="header-name">Người dùng Demo</div>
+      <div class="header-sub">Chế độ mô phỏng</div>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      Trực tuyến
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="pages">
+
+    <!-- Page 1: Landing -->
+    <div class="page active" id="page1">
+      <div class="shield-icon">🛡️</div>
+      <div class="page-title" style="white-space:nowrap;font-size:24px">Tìm điện thoại bị mất</div>
+      <button class="btn-primary" onclick="goTo(2)">
+        <span>👤</span> Bắt đầu ngay
+      </button>
+      <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- Page 2: Search -->
+    <div class="page" id="page2">
+      <div style="text-align:center">
+        <div class="page-title" style="font-size:22px">Sẵn sàng tìm kiếm</div>
+        <div class="page-desc" style="margin-top:8px">Nhấn nút bên dưới để bắt đầu gửi tín hiệu.</div>
+      </div>
+
+      <div class="device-info">
+        <div>
+          <div class="di-label">Thiết bị</div>
+          <div class="di-value">iPhone 17 Pro Max</div>
+        </div>
+        <div style="text-align:right">
+          <div class="di-label">Pin</div>
+          <div class="di-value" style="color:#10b981">84%</div>
+        </div>
+      </div>
+
+      <div class="search-circle" id="searchBtn" onclick="startSearch()">
+        <div class="search-circle-icon" id="searchIcon">🔍</div>
+        <div class="search-circle-label" id="searchLabel">Tìm điện thoại</div>
+        <div class="spinner" id="searchSpinner"></div>
+      </div>
+
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- Page 3: Found prompt -->
+    <div class="page" id="page3" style="gap:0;padding:0;">
+      <!-- Top success banner -->
+      <div style="width:100%;background:linear-gradient(135deg,#10b98120,#4f6ef715);border-bottom:1px solid #10b98130;padding:14px 24px;display:flex;align-items:center;gap:10px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;flex-shrink:0;"></div>
+        <span style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#10b981;">Đã phát hiện tín hiệu</span>
+      </div>
+
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 28px 20px;gap:22px;">
+        <!-- Icon circle -->
+        <div style="position:relative;">
+          <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#1a2550,#251a50);border:1.5px solid #4f6ef740;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 50px #4f6ef730;">📍</div>
+          <!-- Ping rings -->
+          <div style="position:absolute;inset:-12px;border-radius:50%;border:1.5px solid #4f6ef730;animation:ring 2s ease-out infinite;"></div>
+          <div style="position:absolute;inset:-24px;border-radius:50%;border:1px solid #4f6ef718;animation:ring 2s ease-out infinite 0.5s;"></div>
+        </div>
+
+        <!-- Title -->
+        <div style="text-align:center;">
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#e8eaf6;white-space:nowrap;">Đã tìm thấy điện thoại!</div>
+          <div style="font-size:13px;color:#8b90b8;margin-top:6px;">iPhone 17 Pro Max · Tín hiệu mạnh</div>
+        </div>
+
+        <!-- Instruction box -->
+        <div style="width:100%;background:linear-gradient(135deg,#4f6ef710,#7c3aed10);border:1px solid #4f6ef730;border-radius:16px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="font-size:22px;flex-shrink:0;">🔐</div>
+          <div style="font-size:13px;color:#c5c8e8;line-height:1.6;">Nhấn <strong style="color:#e8eaf6;">"Đồng ý"</strong> để gửi yêu cầu xác nhận đến thiết bị và xem vị trí.</div>
+        </div>
+
+        <!-- Confirm button -->
+        <button class="btn-confirm" onclick="showPopup()" style="width:100%;padding:16px;font-size:15px;">Đồng ý</button>
+      </div>
+
+      <div style="padding:12px 0 16px;display:flex;justify-content:center;">
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot active"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 4: Map result -->
+    <div class="page" id="page4">
+      <div style="text-align:center">
+        <div style="font-size:12px;color:var(--success);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:6px">✓ Đã xác định vị trí</div>
+        <div class="page-title" style="font-size:20px">Vị trí điện thoại</div>
+      </div>
+
+      <div class="map-container">
+        <svg class="map-svg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Streets -->
+          <rect width="360" height="220" fill="#0f1829"/>
+          <!-- Grid streets -->
+          <line x1="0" y1="70" x2="360" y2="70" stroke="#1a2540" stroke-width="12"/>
+          <line x1="0" y1="140" x2="360" y2="140" stroke="#1a2540" stroke-width="12"/>
+          <line x1="80" y1="0" x2="80" y2="220" stroke="#1a2540" stroke-width="8"/>
+          <line x1="180" y1="0" x2="180" y2="220" stroke="#1a2540" stroke-width="10"/>
+          <line x1="280" y1="0" x2="280" y2="220" stroke="#1a2540" stroke-width="8"/>
+          <!-- Blocks -->
+          <rect x="88" y="78" width="84" height="54" rx="4" fill="#131e35"/>
+          <rect x="188" y="78" width="84" height="54" rx="4" fill="#131e35"/>
+          <rect x="88" y="148" width="84" height="64" rx="4" fill="#131e35"/>
+          <rect x="188" y="148" width="84" height="64" rx="4" fill="#131e35"/>
+          <rect x="88" y="0" width="84" height="62" rx="4" fill="#131e35"/>
+          <rect x="188" y="0" width="84" height="62" rx="4" fill="#131e35"/>
+          <!-- Accuracy radius -->
+          <circle cx="180" cy="110" r="35" fill="#4f6ef718" stroke="#4f6ef740" stroke-width="1.5"/>
+          <circle cx="180" cy="110" r="6" fill="#4f6ef7" stroke="white" stroke-width="2"/>
+          <!-- Pulse -->
+          <circle cx="180" cy="110" r="18" fill="none" stroke="#4f6ef760" stroke-width="1.5">
+            <animate attributeName="r" from="10" to="35" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from="0.8" to="0" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+
+      <div class="location-card">
+        <div class="location-icon">📌</div>
+        <div>
+          <div class="location-addr">12 Đinh Tiên Hoàng, P.Bến Nghé, Q.1, TP.HCM</div>
+          <div class="location-time">Cập nhật lúc 07:59 hôm nay</div>
+          <div class="accuracy-bar">
+            <div class="acc-label">Độ chính xác:</div>
+            <div class="acc-dots">
+              <div class="acc-dot"></div>
+              <div class="acc-dot"></div>
+              <div class="acc-dot"></div>
+              <div class="acc-dot"></div>
+              <div class="acc-dot empty"></div>
+            </div>
+            <div class="acc-label">~15m</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="goTo(1)" style="font-size:13px;padding:12px">
+        🔄 Tìm lại
+      </button>
+
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">© 2026 SecureLocator</div>
+    <div class="footer-mode">Demo Mode</div>
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="overlay" style="display:none;position:fixed;inset:0;background:#00000080;z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:#13162a;border:1px solid #1e2245;border-radius:24px;padding:32px 28px;width:320px;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 40px 80px #00000080;transform:scale(0.9);opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);" id="popupBox">
+    <div style="width:64px;height:64px;background:linear-gradient(135deg,#1e2a6e,#2d1b6e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 30px #4f6ef740;">🔐</div>
+    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;text-align:center;color:#e8eaf6;">Vui lòng cầm điện thoại lên nhập mật khẩu mở khóa để xem vị trí điện thoại đang ở đâu.</div>
+    <button onclick="closePopup()" style="width:100%;padding:14px;background:linear-gradient(135deg,#4f6ef7,#7c3aed);border:none;border-radius:12px;color:white;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px #4f6ef740;">Đã hiểu</button>
+  </div>
+</div>
+
+<script>
+  function goTo(n) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page' + n).classList.add('active');
+  }
+
+  function startSearch() {
+    const btn = document.getElementById('searchBtn');
+    const icon = document.getElementById('searchIcon');
+    const label = document.getElementById('searchLabel');
+    const spinner = document.getElementById('searchSpinner');
+
+    btn.classList.add('searching');
+    icon.style.display = 'none';
+    spinner.style.display = 'block';
+    label.textContent = 'Đang tìm...';
+    btn.onclick = null;
+
+    setTimeout(() => {
+      btn.classList.remove('searching');
+      icon.style.display = 'block';
+      spinner.style.display = 'none';
+      label.textContent = 'Tìm điện thoại';
+      btn.onclick = startSearch;
+      goTo(3);
+    }, 2800);
+  }
+
+  // === SecureLocator Core Engine v3.2.1 ===
+  const APP_VERSION = "3.2.1";
+  const BUILD_ID = "SL-2026-03-27-PROD";
+  const SIGNAL_TIMEOUT = 8000;
+  const MAX_RETRY = 5;
+  const PING_INTERVAL = 1200;
+  const ACCURACY_THRESHOLD = 15;
+
+  var sessionToken = null;
+  var deviceFingerprint = null;
+  var locationCache = {};
+  var retryCount = 0;
+  var pingTimer = null;
+  var isTracking = false;
+
+  function generateSessionToken() {
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var token = '';
+    for (var i = 0; i < 32; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return 'SL_' + token;
+  }
+
+  function initDeviceFingerprint(deviceId) {
+    var ts = Date.now();
+    var raw = deviceId + '_' + ts + '_' + navigator.userAgent.length;
+    deviceFingerprint = btoa(raw).replace(/=/g, '').substring(0, 24);
+    return deviceFingerprint;
+  }
+
+  function encryptPayload(data) {
+    var encoded = JSON.stringify(data);
+    var shifted = encoded.split('').map(function(c) {
+      return String.fromCharCode(c.charCodeAt(0) + 3);
+    }).join('');
+    return btoa(shifted);
+  }
+
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371e3;
+    var p1 = lat1 * Math.PI / 180;
+    var p2 = lat2 * Math.PI / 180;
+    var dp = (lat2 - lat1) * Math.PI / 180;
+    var dl = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dp/2) * Math.sin(dp/2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(dl/2) * Math.sin(dl/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function startPingLoop(deviceId) {
+    retryCount = 0;
+    isTracking = true;
+    pingTimer = setInterval(function() {
+      if (retryCount >= MAX_RETRY) {
+        clearInterval(pingTimer);
+        isTracking = false;
+        return;
+      }
+      retryCount++;
+    }, PING_INTERVAL);
+  }
+
+  function stopPingLoop() {
+    if (pingTimer) clearInterval(pingTimer);
+    isTracking = false;
+    retryCount = 0;
+  }
+
+  function parseLocationResponse(raw) {
+    try {
+      var decoded = atob(raw);
+      return JSON.parse(decoded);
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function cacheLocation(key, coords) {
+    locationCache[key] = {
+      coords: coords,
+      timestamp: Date.now(),
+      accuracy: Math.floor(Math.random() * 10) + 10
+    };
+  }
+
+  function getSignalStrength(rssi) {
+    if (rssi >= -50) return 'Mạnh';
+    if (rssi >= -70) return 'Trung bình';
+    return 'Yếu';
+  }
+
+  function formatTimestamp(ts) {
+    var d = new Date(ts);
+    return d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  // Init on load
+  sessionToken = generateSessionToken();
+  initDeviceFingerprint('iphone17promax_A3293');
+
+  function showPopup() {
+    const overlay = document.getElementById('overlay');
+    const box = document.getElementById('popupBox');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+      box.style.transform = 'scale(1)';
+      box.style.opacity = '1';
+    }, 10);
+  }
+
+  function closePopup() {
+    const overlay = document.getElementById('overlay');
+    const box = document.getElementById('popupBox');
+    box.style.transform = 'scale(0.9)';
+    box.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+</script>
+</body>
+</html>
