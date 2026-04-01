@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volume Bounce Slider</title>
+  <style>
+    :root{
+      --bg:#ececec;
+      --panel:#f4f4f4;
+      --border:#e1e1e1;
+      --track:#9d9d9d;
+      --text:#111;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
+      overflow:hidden;
+    }
+    .stage{
+      width:100vw;
+      height:100vh;
+      padding:24px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .box{
+      position:relative;
+      width:min(1380px, 96vw);
+      height:min(860px, 92vh);
+      border-radius:32px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      overflow:hidden;
+    }
+    .value{
+      position:absolute;
+      left:50%;
+      top:54px;
+      transform:translateX(-50%);
+      margin:0;
+      font-size:112px;
+      font-weight:700;
+      line-height:1;
+      user-select:none;
+      z-index:3;
+    }
+    .speaker{
+      position:absolute;
+      left:72px;
+      top:300px;
+      transform:translateY(-50%);
+      font-size:64px;
+      line-height:1;
+      user-select:none;
+      pointer-events:none;
+      z-index:2;
+    }
+    .track{
+      position:absolute;
+      left:190px;
+      right:78px;
+      top:300px;
+      height:8px;
+      border-radius:999px;
+      background:var(--track);
+      box-shadow:0 1px 1px rgba(255,255,255,.6), 0 0 0 1px rgba(0,0,0,.04);
+      z-index:1;
+    }
+    .ball{
+      position:absolute;
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      background:#111;
+      box-shadow:0 10px 14px rgba(0,0,0,.18);
+      transform:translate(-50%, -50%);
+      touch-action:none;
+      cursor:grab;
+      z-index:4;
+    }
+    .ball.dragging{cursor:grabbing}
+    @media (max-width: 900px){
+      .stage{padding:12px}
+      .box{
+        width:96vw;
+        height:90vh;
+        border-radius:24px;
+      }
+      .value{
+        top:42px;
+        font-size:72px;
+      }
+      .speaker{
+        left:34px;
+        top:220px;
+        font-size:46px;
+      }
+      .track{
+        left:104px;
+        right:28px;
+        top:220px;
+        height:6px;
+      }
+      .ball{
+        width:34px;
+        height:34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="box" id="box">
+      <div class="value" id="percentText">17%</div>
+      <div class="speaker">🔊</div>
+      <div class="track" id="track"></div>
+      <div class="ball" id="ball" aria-label="Volume slider" title="Kéo để chỉnh volume"></div>
+    </div>
+  </div>
+
+  <script>
+    const box = document.getElementById('box');
+    const track = document.getElementById('track');
+    const ball = document.getElementById('ball');
+    const percentText = document.getElementById('percentText');
+
+    const state = {
+      dragging: false,
+      animating: false,
+      pointerId: null,
+      percent: 17,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      gravity: 0.68,
+      bounce: 0.78,
+      floorFriction: 0.985,
+      air: 0.999,
+      restFrames: 0,
+      raf: null
+    };
+
+    function clamp(v, min, max){
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function rand(min, max){
+      return Math.random() * (max - min) + min;
+    }
+
+    function radius(){
+      return ball.offsetWidth / 2;
+    }
+
+    function trackRect(){
+      return track.getBoundingClientRect();
+    }
+
+    function boxRect(){
+      return box.getBoundingClientRect();
+    }
+
+    function setPercentFromViewportX(x){
+      const rect = trackRect();
+      const p = clamp((x - rect.left) / rect.width, 0, 1);
+      state.percent = Math.round(p * 100);
+      percentText.textContent = state.percent + '%';
+    }
+
+    function getTrackPointByPercent(percent){
+      const rect = trackRect();
+      const p = clamp(percent / 100, 0, 1);
+      return {
+        x: rect.left + rect.width * p,
+        y: rect.top + rect.height / 2
+      };
+    }
+
+    function renderAtViewport(x, y){
+      const b = boxRect();
+      ball.style.left = (x - b.left) + 'px';
+      ball.style.top = (y - b.top) + 'px';
+    }
+
+    function placeOnTrack(percent){
+      const pt = getTrackPointByPercent(percent);
+      state.x = pt.x;
+      state.y = pt.y;
+      state.vx = 0;
+      state.vy = 0;
+      renderAtViewport(state.x, state.y);
+      setPercentFromViewportX(state.x);
+    }
+
+    function stopAnim(){
+      state.animating = false;
+      if(state.raf){
+        cancelAnimationFrame(state.raf);
+        state.raf = null;
+      }
+    }
+
+    function dragTo(clientX){
+      const rect = trackRect();
+      state.x = clamp(clientX, rect.left, rect.right);
+      state.y = rect.top + rect.height / 2;
+      renderAtViewport(state.x, state.y);
+      setPercentFromViewportX(state.x);
+    }
+
+    function startDrag(clientX, pointerId){
+      stopAnim();
+      state.dragging = true;
+      state.pointerId = pointerId;
+      state.restFrames = 0;
+      ball.classList.add('dragging');
+      dragTo(clientX);
+    }
+
+    function endDrag(){
+      if(!state.dragging) return;
+      state.dragging = false;
+      state.pointerId = null;
+      ball.classList.remove('dragging');
+
+      const horizontalKick = rand(-7.5, 7.5);
+      const upwardKick = rand(-1.2, -0.2);
+
+      state.vx = horizontalKick;
+      state.vy = upwardKick;
+      state.restFrames = 0;
+
+      startFall();
+    }
+
+    function startFall(){
+      stopAnim();
+      state.animating = true;
+
+      const step = () => {
+        const b = boxRect();
+        const r = radius();
+
+        state.vy += state.gravity;
+        state.vx *= state.air;
+        state.vy *= state.air;
+
+        state.x += state.vx;
+        state.y += state.vy;
+
+        const minX = b.left + r;
+        const maxX = b.right - r;
+        const minY = b.top + r;
+        const maxY = b.bottom - r;
+
+        if(state.x < minX){
+          state.x = minX;
+          state.vx = Math.abs(state.vx) * (state.bounce * rand(0.94, 1.02));
+          state.vy *= rand(0.98, 1.01);
+        }
+        if(state.x > maxX){
+          state.x = maxX;
+          state.vx = -Math.abs(state.vx) * (state.bounce * rand(0.94, 1.02));
+          state.vy *= rand(0.98, 1.01);
+        }
+        if(state.y < minY){
+          state.y = minY;
+          state.vy = Math.abs(state.vy) * (state.bounce * rand(0.94, 1.02));
+        }
+        if(state.y > maxY){
+          state.y = maxY;
+          state.vy = -Math.abs(state.vy) * (state.bounce * rand(0.92, 1.0));
+          state.vx *= state.floorFriction;
+
+          if (Math.abs(state.vy) > 0.6) {
+            state.vx += rand(-0.45, 0.45);
+          }
+
+          if(Math.abs(state.vy) < 1.0) state.vy = 0;
+        }
+
+        renderAtViewport(state.x, state.y);
+        setPercentFromViewportX(state.x);
+
+        const touchingFloor = Math.abs(state.y - maxY) < 0.6;
+        const almostStill = Math.abs(state.vx) < 0.12 && Math.abs(state.vy) < 0.1;
+
+        if(touchingFloor && almostStill){
+          state.restFrames += 1;
+        } else {
+          state.restFrames = 0;
+        }
+
+        if(state.restFrames > 14){
+          state.y = maxY;
+          state.vx = 0;
+          state.vy = 0;
+          renderAtViewport(state.x, state.y);
+          setPercentFromViewportX(state.x);
+          stopAnim();
+          return;
+        }
+
+        state.raf = requestAnimationFrame(step);
+      };
+
+      state.raf = requestAnimationFrame(step);
+    }
+
+    ball.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      try { ball.setPointerCapture(e.pointerId); } catch (_) {}
+      startDrag(e.clientX, e.pointerId);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if(!state.dragging) return;
+      if(state.pointerId !== null && e.pointerId !== state.pointerId) return;
+      dragTo(e.clientX);
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if(!state.dragging) return;
+      if(state.pointerId !== null && e.pointerId !== state.pointerId) return;
+      endDrag();
+    });
+
+    window.addEventListener('pointercancel', (e) => {
+      if(!state.dragging) return;
+      if(state.pointerId !== null && e.pointerId !== state.pointerId) return;
+      endDrag();
+    });
+
+    window.addEventListener('resize', () => {
+      if(state.dragging) return;
+      if(state.animating){
+        const b = boxRect();
+        const r = radius();
+        state.x = clamp(state.x, b.left + r, b.right - r);
+        state.y = clamp(state.y, b.top + r, b.bottom - r);
+        renderAtViewport(state.x, state.y);
+        setPercentFromViewportX(state.x);
+      } else {
+        placeOnTrack(state.percent);
+      }
+    });
+
+    requestAnimationFrame(() => placeOnTrack(17));
+  </script>
+</body>
+</html>
