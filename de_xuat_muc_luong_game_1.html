@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đề Xuất Mức Lương</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #eef3f9;
+      color: #10233f;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+    }
+    .app {
+      width: min(100vw - 24px, 980px);
+      background: linear-gradient(180deg, #f9fbff 0%, #f2f6fb 100%);
+      border-radius: 28px;
+      padding: 18px 18px 22px;
+      box-shadow: 0 10px 28px rgba(16, 35, 63, 0.08);
+      overflow: hidden;
+    }
+    h1 {
+      text-align: center;
+      font-size: clamp(30px, 4vw, 58px);
+      margin: 6px 0 16px;
+      font-weight: 800;
+    }
+    .board-wrap {
+      position: relative;
+      width: min(100%, 880px);
+      margin: 0 auto 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, #f0f4fa 0%, #e9eef6 100%);
+      border-radius: 28px;
+      border: 1px solid #d8e1ee;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+    }
+    .track {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      min-height: 130px;
+      align-items: center;
+    }
+    .cell {
+      height: 98px;
+      border-radius: 20px;
+      background: #eef2f7;
+      border: 1px solid #d6deea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 800;
+      color: #6b7889;
+      user-select: none;
+      text-align: center;
+      letter-spacing: 0.2px;
+      box-shadow: 0 5px 14px rgba(16, 35, 63, 0.06), inset 0 1px 0 rgba(255,255,255,0.72);
+    }
+    .cell.gold {
+      background: linear-gradient(180deg, #ffe89a 0%, #ffd75d 100%);
+      color: #5c4700;
+      border-color: #efc64d;
+    }
+    .cell.five {
+      background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+      color: #34506d;
+      border-color: #dbe4f0;
+    }
+    .dot {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #0d7cff;
+      box-shadow: 0 8px 22px rgba(13, 124, 255, 0.35);
+      border: 4px solid rgba(255,255,255,0.92);
+      transform: translate(-50%, -50%);
+      transition: left 0.18s linear;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 4px 0 18px;
+      flex-wrap: wrap;
+    }
+    button {
+      min-width: 210px;
+      padding: 16px 24px;
+      font-size: 28px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 800;
+      color: white;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled {
+      cursor: not-allowed;
+      transform: none;
+      opacity: 0.72;
+    }
+    .start { background: #0d7cff; }
+    .stop { background: #6f7785; }
+    .result {
+      margin-top: 8px;
+      background: #ffffff;
+      border-radius: 22px;
+      min-height: 210px;
+      border-left: 6px solid #0d7cff;
+      box-shadow: 0 10px 28px rgba(16, 35, 63, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .result-inner {
+      text-align: center;
+      width: 100%;
+    }
+    .status {
+      font-size: clamp(26px, 2.7vw, 42px);
+      color: #2d8d45;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .status.stopping {
+      color: #c27a00;
+      animation: pulse 0.8s infinite alternate;
+    }
+    .result-label {
+      font-size: clamp(28px, 3vw, 46px);
+      color: #d35c5c;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+    .result-value {
+      font-size: clamp(50px, 6vw, 106px);
+      font-weight: 800;
+      color: #10233f;
+      line-height: 1.05;
+      margin-bottom: 10px;
+    }
+    .hint {
+      font-size: clamp(26px, 2.6vw, 38px);
+      color: #7f8896;
+      font-style: italic;
+    }
+    .note {
+      font-size: clamp(22px, 2.3vw, 32px);
+      color: #586476;
+      line-height: 1.45;
+    }
+    @keyframes pulse {
+      from { opacity: 0.55; }
+      to { opacity: 1; }
+    }
+    @media (max-width: 900px) {
+      .cell {
+        height: 82px;
+        font-size: 28px;
+      }
+      .dot {
+        width: 52px;
+        height: 52px;
+      }
+    }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .app {
+        width: calc(100vw - 16px);
+        padding: 12px 12px 16px;
+        border-radius: 22px;
+      }
+      .board-wrap {
+        padding: 10px;
+        border-radius: 20px;
+      }
+      .track {
+        gap: 6px;
+        min-height: 84px;
+      }
+      .cell {
+        height: 62px;
+        font-size: 18px;
+        border-radius: 12px;
+      }
+      .dot {
+        width: 34px;
+        height: 34px;
+        border-width: 2px;
+      }
+      button {
+        min-width: 148px;
+        font-size: 21px;
+        padding: 12px 14px;
+      }
+      .result { min-height: 170px; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Đề Xuất Mức Lương</h1>
+
+    <div class="board-wrap" id="boardWrap">
+      <div class="track" id="track">
+        <div class="cell five">5tr</div>
+        <div class="cell gold">40tr</div>
+        <div class="cell gold">40tr</div>
+        <div class="cell gold">40tr</div>
+        <div class="cell five">5tr</div>
+      </div>
+      <div class="dot" id="dot"></div>
+    </div>
+
+    <div class="controls">
+      <button class="start" id="startBtn">Bắt Đầu</button>
+      <button class="stop" id="stopBtn">Dừng</button>
+    </div>
+
+    <div class="result">
+      <div class="result-inner" id="resultBox">
+        <div class="hint">Nhấn &quot;Bắt Đầu&quot; để bắt đầu</div>
+        <div class="result-value" style="opacity:0.2;">0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cellsData = [
+      { label: '5tr', value: 5 },
+      { label: '40tr', value: 40 },
+      { label: '40tr', value: 40 },
+      { label: '40tr', value: 40 },
+      { label: '5tr', value: 5 }
+    ];
+
+    const track = document.getElementById('track');
+    const dot = document.getElementById('dot');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resultBox = document.getElementById('resultBox');
+    const cellElements = Array.from(document.querySelectorAll('.cell'));
+
+    let index = 0;
+    let direction = 1;
+    let running = false;
+    let stopRequested = false;
+    let timer = null;
+    let pendingFinishSteps = 0;
+    let hasShownStoppingState = false;
+    let currentSpeed = 210;
+
+    function formatMoney(million) {
+      return new Intl.NumberFormat('vi-VN').format(million * 1000000);
+    }
+
+    function placeDot() {
+      const currentCell = cellElements[index];
+      if (!currentCell) return;
+
+      const wrapRect = track.getBoundingClientRect();
+      const cellRect = currentCell.getBoundingClientRect();
+      const centerX = cellRect.left - wrapRect.left + cellRect.width / 2;
+      dot.style.left = centerX + 'px';
+      dot.style.top = (wrapRect.height / 2) + 'px';
+    }
+
+    function renderIdle() {
+      resultBox.innerHTML = `
+        <div class="hint">Nhấn &quot;Bắt Đầu&quot; để bắt đầu</div>
+        <div class="result-value" style="opacity:0.2;">0</div>
+      `;
+    }
+
+    function renderRunning() {
+      resultBox.innerHTML = `
+        <div class="status">Đang chạy... Nhấn 'Dừng' để xác nhận</div>
+        <div class="result-value" style="opacity:0.2;">0</div>
+      `;
+    }
+
+    function renderStopping() {
+      resultBox.innerHTML = `
+        <div class="status stopping">Đang dừng...</div>
+        <div class="result-value" style="opacity:0.2;">0</div>
+      `;
+    }
+
+    function renderFinal(value) {
+      resultBox.innerHTML = `
+        <div class="result-label">Kết quả:</div>
+        <div class="result-value">${formatMoney(value)}</div>
+        <div class="note">Mức lương đề xuất</div>
+      `;
+    }
+
+    function getNextStep(currentIndex, currentDirection) {
+      let nextDirection = currentDirection;
+      if (currentIndex === cellsData.length - 1) nextDirection = -1;
+      else if (currentIndex === 0) nextDirection = 1;
+      return {
+        index: currentIndex + nextDirection,
+        direction: nextDirection
+      };
+    }
+
+    function scheduleNextTick(delay) {
+      clearTimeout(timer);
+      timer = setTimeout(moveOneStep, delay);
+    }
+
+    function stepsUntilNextFiveBounce(startIndex, startDirection) {
+      let steps = 0;
+      let probeIndex = startIndex;
+      let probeDirection = startDirection;
+      do {
+        const next = getNextStep(probeIndex, probeDirection);
+        probeIndex = next.index;
+        probeDirection = next.direction;
+        steps += 1;
+      } while (cellsData[probeIndex].value !== 5 && steps <= 20);
+      return steps;
+    }
+
+    function moveOneStep() {
+      const next = getNextStep(index, direction);
+      index = next.index;
+      direction = next.direction;
+      placeDot();
+
+      if (stopRequested) {
+        if (!hasShownStoppingState) {
+          hasShownStoppingState = true;
+          renderStopping();
+        }
+
+        if (pendingFinishSteps > 0) {
+          pendingFinishSteps -= 1;
+          const slowdown = pendingFinishSteps <= 1 ? 420 : 260;
+          scheduleNextTick(slowdown);
+          return;
+        }
+
+        if (cellsData[index].value === 5) {
+          finishGame();
+          return;
+        }
+      }
+
+      scheduleNextTick(currentSpeed);
+    }
+
+    function startGame() {
+      if (running) return;
+      running = true;
+      stopRequested = false;
+      pendingFinishSteps = 0;
+      hasShownStoppingState = false;
+      currentSpeed = 210;
+      renderRunning();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      scheduleNextTick(currentSpeed);
+    }
+
+    function requestStop() {
+      if (!running || stopRequested) return;
+      stopRequested = true;
+      hasShownStoppingState = false;
+
+      const baseSteps = stepsUntilNextFiveBounce(index, direction);
+      pendingFinishSteps = cellsData[index].value === 40 ? Math.max(1, baseSteps - 1) : 0;
+
+      if (cellsData[index].value === 5 && pendingFinishSteps === 0) {
+        renderStopping();
+        setTimeout(() => finishGame(), 260);
+      }
+    }
+
+    function finishGame() {
+      clearTimeout(timer);
+      timer = null;
+      running = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      renderFinal(cellsData[index].value);
+    }
+
+    function runTests() {
+      console.assert(cellsData.length === 5, 'Track should contain 5 cells');
+      console.assert(cellsData.filter(cell => cell.value === 5).length === 2, 'Track should contain 2 cells with value 5');
+      console.assert(cellsData.filter(cell => cell.value === 40).length === 3, 'Track should contain 3 cells with value 40');
+      const test1 = getNextStep(0, 1);
+      console.assert(test1.index === 1 && test1.direction === 1, 'Should move right from first cell');
+      const test2 = getNextStep(4, 1);
+      console.assert(test2.index === 3 && test2.direction === -1, 'Should reverse from last cell');
+      console.assert(stepsUntilNextFiveBounce(2, 1) === 2, 'From center 40tr moving right should reach 5tr in 2 steps');
+      console.assert(formatMoney(40) === '40.000.000', 'Money format should match vi-VN format');
+    }
+
+    stopBtn.disabled = true;
+    renderIdle();
+    runTests();
+    requestAnimationFrame(placeDot);
+
+    startBtn.addEventListener('click', startGame);
+    stopBtn.addEventListener('click', requestStop);
+    window.addEventListener('resize', placeDot);
+  </script>
+</body>
+</html>

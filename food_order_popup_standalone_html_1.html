@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Order Language Popup</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #e5e7eb;
+      color: #0f172a;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .app {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      min-height: 100vh;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .header {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      background: rgba(255,255,255,0.94);
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .label { font-size: 12px; color: #64748b; }
+    .address { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: #ffedd5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .search {
+      margin-top: 16px;
+      background: #f1f5f9;
+      color: #64748b;
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-top: 14px;
+      padding-bottom: 4px;
+    }
+    .chip {
+      white-space: nowrap;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .content { padding: 16px; }
+    .banner {
+      background: linear-gradient(90deg, #f97316, #fbbf24);
+      color: white;
+      padding: 20px;
+      border-radius: 26px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .banner small { font-size: 14px; opacity: 0.95; }
+    .banner h2 { margin: 8px 0; font-size: 30px; line-height: 1.15; }
+    .banner p { margin: 0; font-size: 14px; opacity: 0.95; }
+    .food-list { margin-top: 16px; display: grid; gap: 16px; }
+    .card {
+      display: flex;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+    .card img {
+      width: 96px;
+      height: 96px;
+      object-fit: cover;
+      border-radius: 18px;
+      flex-shrink: 0;
+    }
+    .card h3 { margin: 0; font-size: 17px; }
+    .card p {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    .card-bottom {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .price { color: #ea580c; font-size: 20px; font-weight: 700; }
+    .add-btn {
+      border: none;
+      background: #0f172a;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.28);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 20;
+    }
+    .popup {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 24px;
+      z-index: 30;
+      background: #fff;
+      border-radius: 32px;
+      padding: 28px 18px 20px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+    .popup h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 38px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .options {
+      margin-top: 26px;
+      display: grid;
+      gap: 18px;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      width: 100%;
+      padding: 28px 22px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 28px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .option:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .radio {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 2px solid #a1a1aa;
+      flex-shrink: 0;
+      display: inline-block;
+      position: relative;
+      background: #fff;
+    }
+    .option input { display: none; }
+    .option input:checked + .radio::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #111827;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .option-text {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .confirm {
+      margin-top: 20px;
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      background: #0f172a;
+      color: white;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="topbar">
+        <div>
+          <div class="label">Giao đến</div>
+          <div class="address">123 Nguyễn Trãi, Q.1</div>
+        </div>
+        <div class="avatar">🛵</div>
+      </div>
+      <div class="search">Tìm món ăn, nhà hàng, đồ uống...</div>
+      <div class="chips">
+        <div class="chip">Gần bạn</div>
+        <div class="chip">Ưu đãi</div>
+        <div class="chip">Combo</div>
+        <div class="chip">Gà rán</div>
+        <div class="chip">Pizza</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="banner">
+        <small>Ưu đãi hôm nay</small>
+        <h2>Giảm 30% đơn đầu tiên</h2>
+        <p>Áp dụng cho đơn từ 99.000đ</p>
+      </div>
+      <div class="food-list">
+        <div class="card">
+          <img src="https://images.unsplash.com/photo-1562967916-eb82221dfb92?auto=format&fit=crop&w=900&q=80" alt="Gà rán" />
+          <div>
+            <h3>Gà rán giòn cay</h3>
+            <p>Giòn rụm, sốt cay nhẹ, giao nhanh trong 20 phút</p>
+            <div class="card-bottom">
+              <div class="price">79.000đ</div>
+              <button class="add-btn">Thêm</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=80" alt="Burger" />
+          <div>
+            <h3>Burger bò phô mai</h3>
+            <p>Bò nướng thơm, phô mai béo, khoai tây chiên kèm theo</p>
+            <div class="card-bottom">
+              <div class="price">89.000đ</div>
+              <button class="add-btn">Thêm</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80" alt="Pizza" />
+          <div>
+            <h3>Pizza hải sản</h3>
+            <p>Đế mỏng, topping đầy đặn, phô mai kéo sợi</p>
+            <div class="card-bottom">
+              <div class="price">149.000đ</div>
+              <button class="add-btn">Thêm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="overlay"></div>
+    <div class="popup">
+      <h1>Vui Lòng Chọn Ngôn Ngữ</h1>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="language" />
+          <span class="radio"></span>
+          <span class="option-text">Tiếng Anh</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="language" checked />
+          <span class="radio"></span>
+          <span class="option-text">English</span>
+        </label>
+      </div>
+      <button class="confirm">Xác nhận</button>
+    </div>
+  </div>
+</body>
+</html>
