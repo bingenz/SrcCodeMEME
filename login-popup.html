@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Login</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --mono: 'DM Sans', sans-serif;
+    --sans-hero: 'DM Sans', sans-serif;
+    --sans: 'DM Sans', sans-serif;
+    --accent: #6366f1;
+    --accent2: #22d3ee;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#07071a; font-family:var(--sans); min-height:100vh; overflow:hidden; }
+
+  /* ── DARK LANDING BG ── */
+  .landing { position:fixed; inset:0; pointer-events:none; user-select:none; overflow:hidden; }
+  .grid-bg {
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(99,102,241,.07) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(99,102,241,.07) 1px,transparent 1px);
+    background-size:48px 48px;
+  }
+  .glow {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 20%,rgba(99,102,241,.18) 0%,transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 70%,rgba(34,211,238,.12) 0%,transparent 60%),
+      radial-gradient(ellipse 50% 60% at 50% 100%,rgba(167,139,250,.10) 0%,transparent 50%);
+  }
+  .code-stream { position:absolute; inset:0; overflow:hidden; }
+  .code-line {
+    position:absolute; font-family:var(--mono); font-size:11px;
+    color:rgba(99,102,241,.32); white-space:nowrap;
+    animation:scrollUp linear infinite;
+  }
+  @keyframes scrollUp { from{transform:translateY(110vh)} to{transform:translateY(-10vh)} }
+
+  /* Nav */
+  .nav {
+    position:absolute; top:0; left:0; right:0; height:60px;
+    border-bottom:1px solid rgba(99,102,241,.12);
+    display:flex; align-items:center; padding:0 40px; gap:24px;
+  }
+  .nav-logo { font-family:var(--sans-hero); font-weight:800; font-size:18px;
+    background:linear-gradient(135deg,#a5b4fc,#22d3ee);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .nav-links { display:flex; gap:28px; margin-left:32px; }
+  .nav-link  { font-size:13px; color:rgba(148,163,184,.45); font-family:var(--mono); }
+  .nav-cta   { margin-left:auto; background:rgba(99,102,241,.28); color:rgba(165,180,252,.55);
+    font-size:12px; font-family:var(--mono); padding:7px 18px; border-radius:8px; }
+
+  /* Hero */
+  .hero { position:absolute; top:50%; left:50%; transform:translate(-50%,-56%); text-align:center; width:min(680px,90%); }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:10px; color:rgba(34,211,238,.55);
+    border:1px solid rgba(34,211,238,.18); padding:4px 12px; border-radius:100px; margin-bottom:22px;
+  }
+  .hero-badge::before { content:''; width:5px; height:5px; background:#22d3ee; border-radius:50%;
+    animation:blink 2s infinite; opacity:.55; }
+  @keyframes blink { 0%,100%{opacity:.55} 50%{opacity:.15} }
+  .hero-title { font-family:var(--sans-hero); font-size:clamp(38px,5.5vw,64px); font-weight:800;
+    line-height:1.06; letter-spacing:-2px;
+    background:linear-gradient(135deg,rgba(255,255,255,.5) 20%,rgba(167,139,250,.5) 60%,rgba(34,211,238,.5) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    margin-bottom:14px; }
+  .hero-sub { font-family:var(--mono); font-size:12px; color:rgba(100,116,139,.55); line-height:1.8; }
+  .pills { position:absolute; bottom:56px; left:50%; transform:translateX(-50%);
+    display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .pill { font-family:var(--mono); font-size:10px; border:1px solid rgba(99,102,241,.14);
+    padding:5px 14px; border-radius:100px; color:rgba(100,116,139,.38); }
+
+  /* ── OVERLAY ── */
+  .overlay {
+    position:fixed; inset:0;
+    background:rgba(7,7,26,.5);
+    backdrop-filter:blur(14px) saturate(1.1);
+    -webkit-backdrop-filter:blur(14px) saturate(1.1);
+    z-index:10; display:flex; align-items:center; justify-content:center;
+    animation:fadeIn .35s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* ── POPUP (white/light) ── */
+  .popup {
+    width:min(390px,92vw);
+    background:#fff; border-radius:18px;
+    padding:32px 28px 28px;
+    box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 60px rgba(0,0,0,.3),0 0 0 6px rgba(99,102,241,.07);
+    animation:slideUp .42s cubic-bezier(.16,1,.3,1);
+    position:relative; overflow:hidden;
+  }
+  @keyframes slideUp {
+    from{opacity:0;transform:translateY(22px) scale(.97)}
+    to  {opacity:1;transform:translateY(0) scale(1)}
+  }
+  .popup::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,#6366f1,#22d3ee,#a78bfa);
+    border-radius:18px 18px 0 0;
+  }
+
+  /* Views */
+  .view { display:none; }
+  .view.active { display:block; animation:vfade .28s ease; }
+  @keyframes vfade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .popup-icon { font-size:24px; margin-bottom:8px; }
+  .popup-title { font-size:21px; font-weight:700; color:#111827; letter-spacing:-.5px; margin-bottom:3px; }
+  .popup-sub   { font-size:13px; color:#6b7280; margin-bottom:22px; line-height:1.5; }
+
+  /* Inputs */
+  .fg { margin-bottom:13px; }
+  .lbl { display:block; font-size:13px; font-weight:500; color:#374151; margin-bottom:5px; }
+  .inp {
+    width:100%; background:#f9fafb; border:1.5px solid #d1d5db;
+    border-radius:9px; padding:11px 13px;
+    font-size:14px; font-family:var(--sans); color:#111827;
+    outline:none; transition:border-color .2s,box-shadow .2s;
+  }
+  .inp:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.12); }
+  .inp::placeholder { color:#9ca3af; }
+  .inp.err { border-color:#f87171; }
+
+  /* Buttons */
+  .btn {
+    width:100%; margin-top:6px; padding:12px;
+    background:#6366f1; border:none; border-radius:9px;
+    color:#fff; font-size:14px; font-weight:600; font-family:var(--sans);
+    cursor:pointer; box-shadow:0 2px 14px rgba(99,102,241,.3);
+    transition:background .15s,transform .1s,box-shadow .15s;
+  }
+  .btn:hover { background:#4f46e5; transform:translateY(-1px); box-shadow:0 4px 20px rgba(99,102,241,.45); }
+  .btn:active { transform:translateY(0); }
+
+  /* Text link row */
+  .link-row { text-align:center; margin-top:14px; }
+  .tlink {
+    font-size:13px; color:#6366f1; font-weight:500;
+    cursor:pointer; background:none; border:none; font-family:var(--sans);
+    transition:color .15s;
+  }
+  .tlink:hover { color:#4f46e5; text-decoration:underline; }
+
+  /* Divider */
+  .dv { display:flex; align-items:center; gap:12px; margin:16px 0; }
+  .dv-line { flex:1; height:1px; background:#e5e7eb; }
+  .dv-text { font-size:12px; color:#9ca3af; }
+
+  /* Google btn */
+  .gbtn {
+    width:100%; padding:11px; background:#fff; border:1.5px solid #d1d5db;
+    border-radius:9px; color:#374151; font-size:13px; font-weight:500;
+    font-family:var(--sans); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s,border-color .15s;
+  }
+  .gbtn:hover { background:#f9fafb; border-color:#9ca3af; }
+
+  /* ── ALERTS ── */
+  .alert { border-radius:10px; padding:13px 15px; font-size:13px; line-height:1.6;
+    margin-top:13px; display:none; animation:aIn .3s cubic-bezier(.16,1,.3,1); }
+  @keyframes aIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .alert.show { display:block; }
+
+  /* Error */
+  .alert-err { background:#fef2f2; border:1.5px solid #fca5a5; color:#991b1b; }
+  .alert-title { font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .leaked-box {
+    background:#fff; border:1.5px solid #fca5a5; border-radius:8px;
+    padding:9px 12px; margin-top:8px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .leaked-lbl { font-size:11px; color:#9ca3af; display:block; margin-bottom:2px; }
+  .leaked-val { font-family:var(--mono); font-size:13px; color:#dc2626; font-weight:700; }
+  .copy-btn {
+    background:#fee2e2; border:1px solid #fca5a5; border-radius:6px;
+    color:#dc2626; font-size:10px; font-family:var(--mono);
+    padding:4px 10px; cursor:pointer; flex-shrink:0; transition:background .15s;
+  }
+  .copy-btn:hover { background:#fecaca; }
+
+  /* Success */
+  .alert-ok { background:#f0fdf4; border:1.5px solid #86efac; color:#166534; }
+  .alert-ok .alert-title { color:#166534; }
+  .pass-chip {
+    display:inline-block; background:#dcfce7; border:1px solid #86efac;
+    border-radius:5px; padding:1px 8px;
+    font-family:var(--mono); font-size:12px; color:#15803d; font-weight:700; margin:0 2px;
+  }
+  .notified-lbl { font-size:11px; font-weight:600; letter-spacing:.5px;
+    color:#6b7280; text-transform:uppercase; margin:11px 0 7px; }
+  .ulist { display:flex; flex-direction:column; gap:5px; }
+  .uitem {
+    display:flex; align-items:center; gap:9px;
+    background:#fff; border:1px solid #d1fae5; border-radius:7px; padding:7px 10px;
+    font-size:12px;
+  }
+  .uavatar { width:26px; height:26px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; }
+  .uemail { flex:1; font-family:var(--mono); font-size:11px; color:#374151; }
+  .ucheck { color:#22c55e; font-size:13px; }
+  .umore { font-size:11px; color:#9ca3af; text-align:center; padding:4px 0; font-family:var(--mono); }
+  .btn-back {
+    width:100%; margin-top:14px; padding:12px;
+    background:#6366f1; border:none; border-radius:9px;
+    color:#fff; font-size:14px; font-weight:600; font-family:var(--sans);
+    cursor:pointer; box-shadow:0 2px 14px rgba(99,102,241,.3);
+    transition:background .15s,transform .1s;
+  }
+  .btn-back:hover { background:#4f46e5; transform:translateY(-1px); }
+
+  /* Strength */
+  .sbar { height:3px; background:#e5e7eb; border-radius:2px; margin-top:6px; overflow:hidden; }
+  .sfill { height:100%; width:0; border-radius:2px; transition:width .3s,background .3s; }
+  .stxt { font-size:11px; color:#9ca3af; margin-top:3px; }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div class="landing">
+  <div class="grid-bg"></div>
+  <div class="glow"></div>
+  <div class="code-stream" id="cs"></div>
+  <div class="nav">
+    <div class="nav-logo"></div>
+    <div class="nav-links">
+      <span class="nav-link">Products</span>
+      <span class="nav-link">Docs</span>
+      <span class="nav-link">Community</span>
+      <span class="nav-link">Pricing</span>
+    </div>
+    <div class="nav-cta">Get Started</div>
+  </div>
+  <div class="hero">
+    <div class="hero-badge">Secure access portal</div>
+    <h1 class="hero-title">Secure<br>Access</h1>
+    <p class="hero-sub">Protected sign-in and password recovery flow.<br>Simple, clean, and consistent.</p>
+  </div>
+  <div class="pills">
+    <div class="pill">Secure Login</div>
+    <div class="pill">Password Reset</div>
+    <div class="pill">Account Access</div>
+    <div class="pill">Identity Check</div>
+    <div class="pill">Protected Flow</div>
+    <div class="pill">Recovery Mode</div>
+    <div class="pill">Secure Update</div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay">
+  <div class="popup">
+
+    <!-- VIEW: SIGN IN -->
+    <div class="view active" id="v-login">
+      <div class="popup-icon">👋</div>
+      <h2 class="popup-title">Welcome back</h2>
+      <p class="popup-sub">Sign in to your account</p>
+
+      <div class="fg">
+        <label class="lbl">Email address</label>
+        <input class="inp" id="l-email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="fg">
+        <label class="lbl">Password</label>
+        <input class="inp" id="l-pass" type="password" placeholder="Enter your password">
+      </div>
+
+      <button class="btn" onclick="doLogin()">Sign in</button>
+
+      <div class="alert alert-err" id="l-alert">
+        <div class="alert-title">⚠️ Incorrect password</div>
+        <div class="leaked-box">
+          <div>
+            <span class="leaked-val" id="l-pass-show">This user's password is Eimifookada_123</span>
+          </div>
+          <button class="copy-btn" id="cpbtn" onclick="copyPass()">COPY</button>
+        </div>
+      </div>
+
+      <div class="link-row">
+        <button class="tlink" onclick="goTo('v-reset')">Forgot password?</button>
+      </div>
+
+      <div class="dv"><div class="dv-line"></div><span class="dv-text">or</span><div class="dv-line"></div></div>
+
+      <button class="gbtn">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+    </div>
+
+    <!-- VIEW: RESET PASSWORD -->
+    <div class="view" id="v-reset">
+      <div class="popup-icon">🔒</div>
+      <h2 class="popup-title">Reset password</h2>
+      <p class="popup-sub">Choose a new password for your account</p>
+
+      <div class="fg">
+        <label class="lbl">New password</label>
+        <input class="inp" id="r-new" type="password" placeholder="Min. 8 characters" oninput="strength(this.value)">
+        <div class="sbar"><div class="sfill" id="sfill"></div></div>
+        <div class="stxt" id="stxt"></div>
+      </div>
+      <div class="fg">
+        <label class="lbl">Confirm password</label>
+        <input class="inp" id="r-confirm" type="password" placeholder="Repeat your new password">
+      </div>
+
+      <button class="btn" onclick="doReset()">Update password</button>
+
+      <!-- Success -->
+      <div class="alert alert-ok" id="r-alert">
+        <div class="alert-title">✅ Password reset successful!</div>
+        Your password has been updated to <span class="pass-chip" id="r-pass-show"></span>.
+        <br><br>🛡For security purposes, we have notified all other users on this platform of your new password.
+        Just in case you forget it again, you can ask any of the users below.
+
+        <div class="notified-lbl">Notified users (4,821)</div>
+        <div class="ulist" id="ulist"></div>
+
+        <button class="btn-back" onclick="goTo('v-login')">Back to login</button>
+      </div>
+
+      <div class="link-row" id="back-row">
+        <button class="tlink" onclick="goTo('v-login')">← Back to sign in</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* Floating code bg */
+  const lines = [
+    'session.verify(user_input)',
+    'auth.checkCredentials(email, password)',
+    'resetToken = crypto.randomUUID()',
+    'securityLog.push({ action: "login_attempt" })',
+    'await passwordFlow.update(newPassword)',
+    'const access = validateSession(sessionId)',
+    'hash.compare(inputPassword, storedHash)',
+    'account.recoveryEnabled = true',
+    'notifyUsers(platformUsers)',
+    'clipboard.writeText(passwordValue)',
+    'overlay.showModal()',
+    'auditTrail.append("password_changed")',
+  ];
+  const cs = document.getElementById('cs');
+  for (let i = 0; i < 12; i++) {
+    const el = document.createElement('div');
+    el.className = 'code-line';
+    el.textContent = lines[i % lines.length];
+    el.style.left = (Math.random() * 95) + '%';
+    el.style.animationDuration = (18 + Math.random() * 20) + 's';
+    el.style.animationDelay = (-Math.random() * 30) + 's';
+    el.style.opacity = 0.12 + Math.random() * 0.22;
+    cs.appendChild(el);
+  }
+
+  function goTo(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('l-alert').classList.remove('show');
+    document.getElementById('r-alert').classList.remove('show');
+    document.getElementById('back-row').style.display = '';
+    document.getElementById('r-new').value = '';
+    document.getElementById('r-confirm').value = '';
+    document.getElementById('sfill').style.width = '0';
+    document.getElementById('stxt').textContent = '';
+  }
+
+  function doLogin() {
+    const email = document.getElementById('l-email').value.trim();
+    if (!email) { document.getElementById('l-email').classList.add('err'); return; }
+    document.getElementById('l-email').classList.remove('err');
+    document.getElementById('l-pass-show').textContent = "This user's password is Eimifookada_123";
+    document.getElementById('l-alert').classList.add('show');
+  }
+
+  function copyPass() {
+    navigator.clipboard.writeText('Eimifookada_123');
+    const b = document.getElementById('cpbtn');
+    b.textContent = 'COPIED!';
+    setTimeout(() => b.textContent = 'COPY', 1800);
+  }
+
+  const slvl = [
+    {w:'22%',bg:'#ef4444',t:'Too weak'},
+    {w:'48%',bg:'#f97316',t:'Weak'},
+    {w:'74%',bg:'#eab308',t:'Fair'},
+    {w:'100%',bg:'#22c55e',t:'Strong ✓'},
+  ];
+  function strength(v) {
+    let s = 0;
+    if (v.length >= 8)       s++;
+    if (/[A-Z]/.test(v))     s++;
+    if (/[0-9]/.test(v))     s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+    const l = s ? slvl[s-1] : null;
+    document.getElementById('sfill').style.width = l ? l.w : '0';
+    document.getElementById('sfill').style.background = l ? l.bg : '';
+    document.getElementById('stxt').textContent = l ? l.t : '';
+    document.getElementById('stxt').style.color = l ? l.bg : '#9ca3af';
+  }
+
+  const USERS = [
+    {i:'AO',c:'#6366f1',e:'amaka.ojo@gmail.com'},
+    {i:'TM',c:'#f59e0b',e:'tunde.m@yahoo.com'},
+  ];
+
+  function doReset() {
+    const np = document.getElementById('r-new').value;
+    const cp = document.getElementById('r-confirm').value;
+    document.getElementById('r-new').classList.remove('err');
+    document.getElementById('r-confirm').classList.remove('err');
+    if (!np || np.length < 4) { document.getElementById('r-new').classList.add('err'); return; }
+    if (np !== cp)             { document.getElementById('r-confirm').classList.add('err'); return; }
+
+    document.getElementById('r-pass-show').textContent = np;
+    const ul = document.getElementById('ulist');
+    ul.innerHTML = USERS.map(u => `
+      <div class="uitem">
+        <div class="uavatar" style="background:${u.c}">${u.i}</div>
+        <span class="uemail">${u.e}</span>
+        <span class="ucheck">✓</span>
+      </div>`).join('') + `<div class="umore">and 4,819 others...</div>`;
+
+    document.getElementById('r-alert').classList.add('show');
+    document.getElementById('back-row').style.display = 'none';
+  }
+</script>
+</body>
+</html>
