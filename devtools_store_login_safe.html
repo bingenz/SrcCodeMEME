@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: rgba(99, 102, 241, 0.06);
+      --primary: #4f46e5;
+      --primary-2: #06b6d4;
+      --panel: rgba(255,255,255,0.94);
+      --panel-border: rgba(15, 23, 42, 0.08);
+      --danger: #ef4444;
+      --success: #16a34a;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.06), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.05), transparent 26%),
+        #ffffff;
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: radial-gradient(circle at center, black 42%, transparent 92%);
+      -webkit-mask-image: radial-gradient(circle at center, black 42%, transparent 92%);
+    }
+
+    .orb, .orb2 {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(60px);
+      opacity: .55;
+    }
+
+    .orb {
+      width: 420px;
+      height: 420px;
+      left: -100px;
+      top: -120px;
+      background: rgba(79, 70, 229, 0.13);
+    }
+
+    .orb2 {
+      width: 360px;
+      height: 360px;
+      right: -80px;
+      bottom: -90px;
+      background: rgba(6, 182, 212, 0.12);
+    }
+
+    .cards {
+      position: absolute;
+      inset: 0;
+      filter: blur(1.6px);
+      opacity: .62;
+    }
+
+    .code-card {
+      position: absolute;
+      width: 210px;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .code-card:nth-child(1) { top: 12%; left: 8%; transform: rotate(-8deg); }
+    .code-card:nth-child(2) { top: 64%; left: 10%; transform: rotate(8deg); width: 180px; }
+    .code-card:nth-child(3) { top: 15%; right: 9%; transform: rotate(9deg); }
+    .code-card:nth-child(4) { bottom: 12%; right: 8%; transform: rotate(-7deg); width: 185px; }
+
+    .head { display: flex; gap: 6px; margin-bottom: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+    .line { height: 8px; margin-bottom: 9px; border-radius: 999px; background: linear-gradient(90deg, rgba(79, 70, 229, 0.2), rgba(6, 182, 212, 0.12)); }
+    .w1 { width: 88%; }
+    .w2 { width: 64%; }
+    .w3 { width: 77%; }
+    .w4 { width: 48%; }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+
+    .panel {
+      width: min(390px, 92vw);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      padding: 30px 26px 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #4f46e5, #06b6d4, #818cf8);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; animation: fade .25s ease; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon { font-size: 24px; margin-bottom: 8px; }
+    .title { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .sub { font-size: 14px; line-height: 1.6; color: var(--muted); margin-bottom: 22px; }
+
+    .field { margin-bottom: 14px; }
+    .label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; color: #334155; }
+    .input {
+      width: 100%;
+      border: 1.5px solid #dbe2ea;
+      background: rgba(255,255,255,0.96);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: .18s ease;
+    }
+    .input::placeholder { color: #94a3b8; }
+    .input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,.12);
+      transform: translateY(-1px);
+    }
+    .input.err { border-color: #f87171; box-shadow: 0 0 0 4px rgba(248,113,113,.12); }
+
+    .btn {
+      width: 100%;
+      margin-top: 6px;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(79,70,229,.22);
+      transition: .18s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+
+    .link-row { text-align: center; margin-top: 14px; }
+    .tlink {
+      background: none;
+      border: none;
+      color: #4f46e5;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .dv {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .dv::before, .dv::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .gbtn {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #dbe2ea;
+      background: #fff;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .alert {
+      display: none;
+      margin-top: 14px;
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .alert.show { display: block; animation: fade .22s ease; }
+    .alert.err {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+    .alert.ok {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .alert-title { font-weight: 700; margin-bottom: 4px; }
+
+    .strength { margin-top: 7px; }
+    .bar { height: 4px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+    .fill { width: 0; height: 100%; border-radius: inherit; transition: .25s ease; }
+    .stxt { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+    @media (max-width: 640px) {
+      .cards { display: none; }
+      .panel { padding: 26px 22px 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="grid"></div>
+    <div class="orb"></div>
+    <div class="orb2"></div>
+    <div class="cards">
+      <div class="code-card">
+        <div class="head"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="line w1"></div><div class="line w2"></div><div class="line w3"></div>
+      </div>
+      <div class="code-card">
+        <div class="head"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="line w3"></div><div class="line w4"></div><div class="line w2"></div>
+      </div>
+      <div class="code-card">
+        <div class="head"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="line w2"></div><div class="line w1"></div><div class="line w4"></div>
+      </div>
+      <div class="code-card">
+        <div class="head"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="line w1"></div><div class="line w3"></div><div class="line w4"></div>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="panel">
+      <div class="view active" id="v-login">
+        <div class="icon">👋</div>
+        <div class="title">Welcome back</div>
+        <div class="sub">Sign in to your account</div>
+
+        <div class="field">
+          <label class="label">Email address</label>
+          <input class="input" id="l-email" type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label class="label">Password</label>
+          <input class="input" id="l-pass" type="password" placeholder="Enter your password">
+        </div>
+
+        <button class="btn" onclick="doLogin()">Sign in</button>
+
+        <div class="alert err" id="l-alert">
+          <div class="alert-title">Unable to sign in</div>
+          We couldn’t verify your email or password. Please try again.
+        </div>
+
+        <div class="link-row">
+          <button class="tlink" onclick="goTo('v-reset')">Forgot password?</button>
+        </div>
+
+        <div class="dv">or</div>
+
+        <button class="gbtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <div class="view" id="v-reset">
+        <div class="icon">🔒</div>
+        <div class="title">Reset password</div>
+        <div class="sub">Choose a new password for your account</div>
+
+        <div class="field">
+          <label class="label">New password</label>
+          <input class="input" id="r-new" type="password" placeholder="Min. 8 characters" oninput="strength(this.value)">
+          <div class="strength">
+            <div class="bar"><div class="fill" id="sfill"></div></div>
+            <div class="stxt" id="stxt"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Confirm password</label>
+          <input class="input" id="r-confirm" type="password" placeholder="Repeat your new password">
+        </div>
+
+        <button class="btn" onclick="doReset()">Update password</button>
+
+        <div class="alert ok" id="r-alert">
+          <div class="alert-title">Password reset successful</div>
+          Your password has been updated successfully. You can return to sign in.
+        </div>
+
+        <div class="link-row" id="back-row">
+          <button class="tlink" onclick="goTo('v-login')">← Back to sign in</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function goTo(id) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.getElementById('l-alert').classList.remove('show');
+      document.getElementById('r-alert').classList.remove('show');
+      document.getElementById('back-row').style.display = '';
+      document.getElementById('r-new').classList.remove('err');
+      document.getElementById('r-confirm').classList.remove('err');
+      document.getElementById('sfill').style.width = '0';
+      document.getElementById('sfill').style.background = '';
+      document.getElementById('stxt').textContent = '';
+    }
+
+    function doLogin() {
+      const email = document.getElementById('l-email');
+      const pass = document.getElementById('l-pass');
+      email.classList.remove('err');
+      pass.classList.remove('err');
+      let hasError = false;
+
+      if (!email.value.trim()) { email.classList.add('err'); hasError = true; }
+      if (!pass.value.trim()) { pass.classList.add('err'); hasError = true; }
+
+      if (hasError || pass.value.trim() !== 'demo1234') {
+        document.getElementById('l-alert').classList.add('show');
+        if (!pass.value.trim() || pass.value.trim() !== 'demo1234') pass.classList.add('err');
+        return;
+      }
+
+      document.getElementById('l-alert').classList.remove('show');
+      alert('Demo login success');
+    }
+
+    const levels = [
+      { w: '25%', c: '#ef4444', t: 'Too weak' },
+      { w: '50%', c: '#f97316', t: 'Weak' },
+      { w: '75%', c: '#eab308', t: 'Fair' },
+      { w: '100%', c: '#22c55e', t: 'Strong ✓' }
+    ];
+
+    function strength(value) {
+      let score = 0;
+      if (value.length >= 8) score++;
+      if (/[A-Z]/.test(value)) score++;
+      if (/[0-9]/.test(value)) score++;
+      if (/[^A-Za-z0-9]/.test(value)) score++;
+      const level = score ? levels[score - 1] : null;
+      document.getElementById('sfill').style.width = level ? level.w : '0';
+      document.getElementById('sfill').style.background = level ? level.c : '';
+      document.getElementById('stxt').textContent = level ? level.t : '';
+      document.getElementById('stxt').style.color = level ? level.c : '#94a3b8';
+    }
+
+    function doReset() {
+      const np = document.getElementById('r-new');
+      const cp = document.getElementById('r-confirm');
+      np.classList.remove('err');
+      cp.classList.remove('err');
+
+      if (!np.value || np.value.length < 8) {
+        np.classList.add('err');
+        return;
+      }
+      if (np.value !== cp.value) {
+        cp.classList.add('err');
+        return;
+      }
+
+      document.getElementById('r-alert').classList.add('show');
+    }
+  </script>
+</body>
+</html>
